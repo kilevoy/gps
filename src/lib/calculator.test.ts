@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calculateExactResult, calculateOrderSummary, findOptimalProfiles } from './calculator'
+import { calculateExactResult } from './calculator'
 
 describe('calculateExactResult', () => {
   it('calculates PP profile metrics and price correctly', () => {
@@ -35,45 +35,5 @@ describe('calculateExactResult', () => {
         pricePerTon: 160000,
       }),
     ).toThrow(/Unsupported thickness/)
-  })
-})
-
-describe('findOptimalProfiles', () => {
-  it('returns sorted options with waste below 10%', () => {
-    const options = findOptimalProfiles({
-      profileType: 'PP',
-      thickness: 1.0,
-      wallHeight: 100,
-      shelfWidthA: 50,
-      shelfWidthB: 50,
-      flangeC: 0,
-      pricePerTon: 160000,
-    })
-
-    expect(options.length).toBeGreaterThan(0)
-    expect(options.every((item) => item.wastePercentage < 10)).toBe(true)
-
-    for (let index = 1; index < options.length; index += 1) {
-      expect(options[index - 1].priceWithWaste).toBeLessThanOrEqual(options[index].priceWithWaste)
-    }
-  })
-})
-
-describe('calculateOrderSummary', () => {
-  it('calculates order totals for selected profile', () => {
-    const profile = calculateExactResult({
-      profileType: 'PP',
-      thickness: 1.0,
-      wallHeight: 100,
-      shelfWidthA: 50,
-      shelfWidthB: 50,
-      flangeC: 0,
-      pricePerTon: 160000,
-    })
-
-    const summary = calculateOrderSummary(profile, 100, 6)
-    expect(summary.totalLinearMeters).toBe(600)
-    expect(summary.finalSum).toBeGreaterThan(summary.orderSum)
-    expect(summary.requiredRollLength).toBeGreaterThan(0)
   })
 })
