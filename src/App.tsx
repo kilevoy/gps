@@ -218,9 +218,9 @@ export default function App() {
                     : 'border border-emerald-200 bg-emerald-50'
                 }`}
               >
-                <div className="rounded-2xl bg-slate-900 p-4 text-white">
-                  <p className="text-xs uppercase tracking-widest text-slate-300">Профиль</p>
-                  <p className="mt-2 text-xl font-bold">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <p className="text-xs uppercase tracking-widest text-slate-500">Профиль</p>
+                  <p className="mt-2 text-xl font-bold text-slate-900">
                     {buildProfileName({
                       profileType,
                       wallHeight: Number(watch('wallHeight')),
