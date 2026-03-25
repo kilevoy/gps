@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMemo, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useEffect, useMemo, useState } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import { calculateExactResult, type CalculationResult, type ProfileType } from './lib/calculator'
 
@@ -37,11 +37,13 @@ export default function App() {
 
   const {
     register,
-    handleSubmit,
     watch,
-    formState: { errors, isSubmitting },
+    control,
+    formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: {
       profileType: 'PP',
       thickness: 1.2,
@@ -56,14 +58,23 @@ export default function App() {
   const profileType = watch('profileType')
   const showShelfB = profileType === 'PZ'
   const showFlangeC = profileType !== 'PP'
+  const watchedValues = useWatch({ control })
 
   const wasteState = useMemo(() => {
     if (!result) return 'neutral'
     return result.wastePercentage > 10 ? 'danger' : 'good'
   }, [result])
 
-  const onSubmit = (data: FormData) => {
-    setServerError('')
+  useEffect(() => {
+    const parsed = formSchema.safeParse(watchedValues)
+    if (!parsed.success) {
+      setResult(null)
+      setServerError('')
+      return
+    }
+
+    const data = parsed.data
+
     try {
       const normalized = {
         ...data,
@@ -72,11 +83,12 @@ export default function App() {
       }
       const next = calculateExactResult(normalized)
       setResult(next)
+      setServerError('')
     } catch (error) {
       setResult(null)
       setServerError(error instanceof Error ? error.message : 'Не удалось выполнить расчет')
     }
-  }
+  }, [watchedValues])
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_10%_20%,#eff6ff,transparent_40%),radial-gradient(circle_at_90%_0%,#fee2e2,transparent_35%),#f8fafc] px-4 py-8 font-sans text-slate-900">
@@ -88,7 +100,7 @@ export default function App() {
         <div className="grid gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
             <h2 className="mb-4 text-lg font-bold">Параметры</h2>
-            <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+            <form className="space-y-4">
               <label className="block space-y-1">
                 <span className="text-sm font-semibold text-slate-700">Тип профиля</span>
                 <select className="input" {...register('profileType')}>
@@ -142,14 +154,6 @@ export default function App() {
                 <input className="input" type="number" {...register('pricePerTon', { valueAsNumber: true })} />
                 {errors.pricePerTon && <p className="field-error">{errors.pricePerTon.message}</p>}
               </label>
-
-              <button
-                className="mt-2 w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-                type="submit"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Считаем...' : 'Рассчитать'}
-              </button>
             </form>
           </section>
 
@@ -175,7 +179,7 @@ export default function App() {
 
             {!result && !serverError && (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
-                Заполните форму и нажмите «Рассчитать».
+                Измените параметры в форме: расчет выполняется автоматически.
               </div>
             )}
 
