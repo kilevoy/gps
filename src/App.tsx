@@ -31,6 +31,33 @@ function labelByProfile(type: ProfileType): string {
   return 'ПZ'
 }
 
+function formatThickness(value: number): string {
+  return Number(value).toFixed(1).replace('.', ',')
+}
+
+function buildProfileName(params: {
+  profileType: ProfileType
+  wallHeight: number
+  shelfWidthA: number
+  shelfWidthB: number
+  flangeC: number
+  thickness: number
+}): string {
+  const { profileType, wallHeight, shelfWidthA, shelfWidthB, flangeC, thickness } = params
+  const profile = labelByProfile(profileType)
+  const t = formatThickness(thickness)
+
+  if (profileType === 'PP') {
+    return `${profile} ${wallHeight}x${shelfWidthA} без перфор. ${t} (Оцинк.)`
+  }
+
+  if (profileType === 'PGS') {
+    return `${profile} ${wallHeight}x${shelfWidthA}x${flangeC} без перфор. ${t} (Оцинк.)`
+  }
+
+  return `${profile} ${wallHeight}x${shelfWidthA}x${shelfWidthB}x${flangeC} без перфор. ${t} (Оцинк.)`
+}
+
 export default function App() {
   const [result, setResult] = useState<CalculationResult | null>(null)
   const [serverError, setServerError] = useState<string>('')
@@ -188,8 +215,14 @@ export default function App() {
                 <div className="rounded-2xl bg-slate-900 p-4 text-white">
                   <p className="text-xs uppercase tracking-widest text-slate-300">Профиль</p>
                   <p className="mt-2 text-xl font-bold">
-                    {labelByProfile(profileType)} • {watch('wallHeight')} x {watch('shelfWidthA')}
-                    {profileType === 'PZ' ? ` x ${watch('shelfWidthB')}` : ''} • t={watch('thickness')}
+                    {buildProfileName({
+                      profileType,
+                      wallHeight: Number(watch('wallHeight')),
+                      shelfWidthA: Number(watch('shelfWidthA')),
+                      shelfWidthB: Number(watch('shelfWidthB')),
+                      flangeC: Number(watch('flangeC')),
+                      thickness: Number(watch('thickness')),
+                    })}
                   </p>
                 </div>
 
