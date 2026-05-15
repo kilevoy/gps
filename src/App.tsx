@@ -309,23 +309,21 @@ export default function App() {
         </div>
 
         <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
-          <div className="mb-5">
-            <div>
-              <h2 className="text-lg font-bold">Подбор выгодного профиля</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Подбираем {labelByProfile(profileType)} толщиной {formatThickness(selectedThickness)} мм. Ось X: полка A,
-                ось Y: высота стенки. Нажмите на ячейку, чтобы подставить размеры в расчет.
-              </p>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="mr-2 text-lg font-bold">Подбор выгодного профиля</h2>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-800">
+                {labelByProfile(profileType)}
+              </span>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
+                t {formatThickness(selectedThickness)} мм
+              </span>
               {showFlangeC && (
-                <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-bold text-amber-900">
-                  <span className="text-amber-700">Отгибка C</span>
-                  <span className="rounded-full bg-white px-3 py-1 text-slate-900 shadow-sm">{format(flangeCValue, 0)} мм</span>
-                </div>
+                <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-extrabold text-amber-900">
+                  C {format(flangeCValue, 0)} мм
+                </span>
               )}
             </div>
-          </div>
-
-          <div className="mb-4 flex flex-wrap items-center justify-end gap-2 text-xs font-bold text-slate-700">
             <div className="flex flex-wrap gap-2 text-xs font-bold text-slate-700">
               <span className="rounded-full bg-emerald-100 px-3 py-1">0-5%</span>
               <span className="rounded-full bg-yellow-100 px-3 py-1">5-10%</span>
@@ -333,6 +331,9 @@ export default function App() {
               <span className="rounded-full bg-rose-100 px-3 py-1">&gt;20%</span>
             </div>
           </div>
+          <p className="mb-4 text-xs font-medium text-slate-500">
+            X: полка A, Y: высота стенки. Клик по ячейке подставляет размеры в расчет.
+          </p>
 
           {!normalizedValues && (
             <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
@@ -375,15 +376,15 @@ export default function App() {
                 </div>
               )}
 
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[1120px] border-separate border-spacing-1">
+              <div>
+                <table className="w-full table-fixed border-separate border-spacing-0.5 sm:border-spacing-1">
                 <thead>
                   <tr>
-                    <th className="w-20 px-2 py-2 text-right text-xs font-bold uppercase tracking-wider text-slate-500">
+                    <th className="w-12 px-1 py-2 text-right text-[9px] font-bold uppercase text-slate-500 sm:w-16 sm:text-xs">
                       Высота
                     </th>
                     {shelfWidthTicks.map((shelfWidth) => (
-                      <th key={shelfWidth} className="px-2 py-2 text-center text-xs font-bold uppercase tracking-wider text-slate-500">
+                      <th key={shelfWidth} className="px-0.5 py-2 text-center text-[9px] font-bold uppercase text-slate-500 sm:text-xs">
                         {shelfWidth}
                       </th>
                     ))}
@@ -392,7 +393,7 @@ export default function App() {
                 <tbody>
                   {wasteMap.map((row) => (
                     <tr key={row[0].wallHeight}>
-                      <th className="px-2 py-1 text-right text-xs font-bold text-slate-500">{row[0].wallHeight}</th>
+                      <th className="px-1 py-1 text-right text-[9px] font-bold text-slate-500 sm:text-xs">{row[0].wallHeight}</th>
                       {row.map((cell) => {
                         const isSelected =
                           cell.wallHeight === normalizedValues.wallHeight && cell.shelfWidthA === normalizedValues.shelfWidthA
@@ -400,7 +401,7 @@ export default function App() {
                         return (
                           <td key={`${cell.wallHeight}-${cell.shelfWidthA}`} className="p-0.5">
                             <button
-                              className={`flex h-9 min-w-16 cursor-pointer items-center justify-center rounded-lg border text-xs font-extrabold transition hover:scale-[1.03] hover:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-1 ${
+                              className={`flex h-7 w-full cursor-pointer items-center justify-center rounded-md border text-[9px] font-extrabold transition hover:scale-[1.03] hover:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-1 sm:h-8 sm:rounded-lg sm:text-xs ${
                                 isSelected ? 'border-slate-900 shadow-[0_0_0_2px_rgba(15,23,42,0.16)]' : 'border-white'
                               }`}
                               type="button"
