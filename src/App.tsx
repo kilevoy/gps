@@ -19,6 +19,8 @@ type FormData = z.infer<typeof formSchema>
 const thicknessOptions = [1, 1.2, 1.5, 2, 2.5, 3]
 const wallHeightTicks = Array.from({ length: 26 }, (_, index) => 100 + index * 10)
 const shelfWidthTicks = Array.from({ length: 13 }, (_, index) => 40 + index * 5)
+const flangeMin = 13
+const flangeMax = 27
 
 interface WasteMapCell {
   wallHeight: number
@@ -82,6 +84,7 @@ export default function App() {
   const {
     register,
     control,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -102,6 +105,8 @@ export default function App() {
   const profileType = watchedValues.profileType ?? 'PP'
   const showShelfB = profileType === 'PZ'
   const showFlangeC = profileType !== 'PP'
+  const flangeCValue = Number(watchedValues.flangeC ?? flangeMin)
+  const selectedThickness = Number(watchedValues.thickness ?? 0)
 
   const normalizedValues = useMemo(() => {
     const parsed = formSchema.safeParse(watchedValues)
@@ -137,9 +142,7 @@ export default function App() {
   const wasteMap = useMemo(() => {
     if (!normalizedValues) return []
 
-    return [...wallHeightTicks]
-      .reverse()
-      .map((wallHeight) =>
+    return wallHeightTicks.map((wallHeight) =>
         shelfWidthTicks.map<WasteMapCell>((shelfWidthA) => {
           const next = calculateExactResult({
             ...normalizedValues,
@@ -156,6 +159,15 @@ export default function App() {
         }),
       )
   }, [normalizedValues])
+
+  function applyGraphCell(cell: WasteMapCell) {
+    setValue('wallHeight', cell.wallHeight, { shouldDirty: true, shouldTouch: true, shouldValidate: true })
+    setValue('shelfWidthA', cell.shelfWidthA, { shouldDirty: true, shouldTouch: true, shouldValidate: true })
+
+    if (profileType !== 'PZ') {
+      setValue('shelfWidthB', cell.shelfWidthA, { shouldDirty: true, shouldTouch: true, shouldValidate: true })
+    }
+  }
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_10%_20%,#eff6ff,transparent_40%),radial-gradient(circle_at_90%_0%,#fee2e2,transparent_35%),#f8fafc] px-4 py-8 font-sans text-slate-900">
@@ -297,13 +309,23 @@ export default function App() {
         </div>
 
         <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
-          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div className="mb-5">
             <div>
-              <h2 className="text-lg font-bold">График отхода</h2>
+              <h2 className="text-lg font-bold">Подбор выгодного профиля</h2>
               <p className="mt-1 text-sm text-slate-500">
-                Ось X: полка A, ось Y: высота стенки. Цвет показывает процент отхода.
+                Подбираем {labelByProfile(profileType)} толщиной {formatThickness(selectedThickness)} мм. Ось X: полка A,
+                ось Y: высота стенки. Нажмите на ячейку, чтобы подставить размеры в расчет.
               </p>
+              {showFlangeC && (
+                <div className="mt-3 inline-flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-bold text-amber-900">
+                  <span className="text-amber-700">Отгибка C</span>
+                  <span className="rounded-full bg-white px-3 py-1 text-slate-900 shadow-sm">{format(flangeCValue, 0)} мм</span>
+                </div>
+              )}
             </div>
+          </div>
+
+          <div className="mb-4 flex flex-wrap items-center justify-end gap-2 text-xs font-bold text-slate-700">
             <div className="flex flex-wrap gap-2 text-xs font-bold text-slate-700">
               <span className="rounded-full bg-emerald-100 px-3 py-1">0-5%</span>
               <span className="rounded-full bg-yellow-100 px-3 py-1">5-10%</span>
@@ -319,8 +341,42 @@ export default function App() {
           )}
 
           {normalizedValues && (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] border-separate border-spacing-1">
+            <div>
+              {showFlangeC && (
+                <div className="mb-4 rounded-2xl border-2 border-amber-200 bg-amber-50 p-4 shadow-sm">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <label htmlFor="graphFlangeC" className="text-sm font-extrabold text-amber-900">
+                      Отгибка C
+                    </label>
+                    <span className="rounded-full bg-white px-3 py-1 text-sm font-extrabold text-slate-900 shadow-sm">
+                      {format(flangeCValue, 0)} мм
+                    </span>
+                  </div>
+                  <input
+                    id="graphFlangeC"
+                    className="w-full accent-amber-600"
+                    type="range"
+                    min={flangeMin}
+                    max={flangeMax}
+                    step={1}
+                    value={flangeCValue}
+                    onChange={(event) => {
+                      setValue('flangeC', Number(event.target.value), {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                        shouldValidate: true,
+                      })
+                    }}
+                  />
+                  <div className="mt-2 flex justify-between text-xs font-bold text-slate-500">
+                    <span>{flangeMin} мм</span>
+                    <span>{flangeMax} мм</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[1120px] border-separate border-spacing-1">
                 <thead>
                   <tr>
                     <th className="w-20 px-2 py-2 text-right text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -343,10 +399,12 @@ export default function App() {
 
                         return (
                           <td key={`${cell.wallHeight}-${cell.shelfWidthA}`} className="p-0.5">
-                            <div
-                              className={`flex h-9 min-w-16 items-center justify-center rounded-lg border text-xs font-extrabold ${
+                            <button
+                              className={`flex h-9 min-w-16 cursor-pointer items-center justify-center rounded-lg border text-xs font-extrabold transition hover:scale-[1.03] hover:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-1 ${
                                 isSelected ? 'border-slate-900 shadow-[0_0_0_2px_rgba(15,23,42,0.16)]' : 'border-white'
                               }`}
+                              type="button"
+                              onClick={() => applyGraphCell(cell)}
                               style={{
                                 backgroundColor: getWasteColor(cell.wastePercentage),
                                 color: getWasteTextColor(cell.wastePercentage),
@@ -354,7 +412,7 @@ export default function App() {
                               title={`Высота ${cell.wallHeight} мм, полка ${cell.shelfWidthA} мм: ${format(cell.wastePercentage)}%`}
                             >
                               {format(cell.wastePercentage, 1)}
-                            </div>
+                            </button>
                           </td>
                         )
                       })}
@@ -362,7 +420,8 @@ export default function App() {
                   ))}
                 </tbody>
               </table>
-              <p className="mt-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Полка A, мм</p>
+                <p className="mt-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Полка A, мм</p>
+              </div>
             </div>
           )}
         </section>
