@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
 import { calculateExactResult, type CalculationResult, type ProfileType } from './lib/calculator'
@@ -17,6 +17,14 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 const thicknessOptions = [1, 1.2, 1.5, 2, 2.5, 3]
+const wallHeightTicks = Array.from({ length: 26 }, (_, index) => 100 + index * 10)
+const shelfWidthTicks = Array.from({ length: 13 }, (_, index) => 40 + index * 5)
+
+interface WasteMapCell {
+  wallHeight: number
+  shelfWidthA: number
+  wastePercentage: number
+}
 
 function format(value: number, digits = 2): string {
   return new Intl.NumberFormat('ru-RU', {
@@ -33,6 +41,18 @@ function labelByProfile(type: ProfileType): string {
 
 function formatThickness(value: number): string {
   return Number(value).toFixed(1).replace('.', ',')
+}
+
+function getWasteColor(wastePercentage: number): string {
+  if (wastePercentage <= 5) return '#dcfce7'
+  if (wastePercentage <= 10) return '#fef9c3'
+  if (wastePercentage <= 20) return '#fed7aa'
+  if (wastePercentage <= 35) return '#fecdd3'
+  return '#fda4af'
+}
+
+function getWasteTextColor(wastePercentage: number): string {
+  return wastePercentage > 35 ? '#881337' : '#0f172a'
 }
 
 function buildProfileName(params: {
@@ -59,12 +79,8 @@ function buildProfileName(params: {
 }
 
 export default function App() {
-  const [result, setResult] = useState<CalculationResult | null>(null)
-  const [serverError, setServerError] = useState<string>('')
-
   const {
     register,
-    watch,
     control,
     formState: { errors },
   } = useForm<FormData>({
@@ -82,40 +98,64 @@ export default function App() {
     },
   })
 
-  const profileType = watch('profileType')
+  const watchedValues = useWatch({ control })
+  const profileType = watchedValues.profileType ?? 'PP'
   const showShelfB = profileType === 'PZ'
   const showFlangeC = profileType !== 'PP'
-  const watchedValues = useWatch({ control })
+
+  const normalizedValues = useMemo(() => {
+    const parsed = formSchema.safeParse(watchedValues)
+    if (!parsed.success) return null
+
+    return {
+      ...parsed.data,
+      shelfWidthB: parsed.data.profileType === 'PZ' ? parsed.data.shelfWidthB : parsed.data.shelfWidthA,
+      flangeC: parsed.data.profileType === 'PP' ? 0 : parsed.data.flangeC,
+    }
+  }, [watchedValues])
+
+  const calculation = useMemo<{ result: CalculationResult | null; serverError: string }>(() => {
+    if (!normalizedValues) return { result: null, serverError: '' }
+
+    try {
+      return { result: calculateExactResult(normalizedValues), serverError: '' }
+    } catch (error) {
+      return {
+        result: null,
+        serverError: error instanceof Error ? error.message : 'Не удалось выполнить расчет',
+      }
+    }
+  }, [normalizedValues])
+
+  const { result, serverError } = calculation
 
   const wasteState = useMemo(() => {
     if (!result) return 'neutral'
     return result.wastePercentage > 5 ? 'danger' : 'good'
   }, [result])
 
-  useEffect(() => {
-    const parsed = formSchema.safeParse(watchedValues)
-    if (!parsed.success) {
-      setResult(null)
-      setServerError('')
-      return
-    }
+  const wasteMap = useMemo(() => {
+    if (!normalizedValues) return []
 
-    const data = parsed.data
+    return [...wallHeightTicks]
+      .reverse()
+      .map((wallHeight) =>
+        shelfWidthTicks.map<WasteMapCell>((shelfWidthA) => {
+          const next = calculateExactResult({
+            ...normalizedValues,
+            wallHeight,
+            shelfWidthA,
+            shelfWidthB: normalizedValues.profileType === 'PZ' ? normalizedValues.shelfWidthB : shelfWidthA,
+          })
 
-    try {
-      const normalized = {
-        ...data,
-        shelfWidthB: data.profileType === 'PZ' ? data.shelfWidthB : data.shelfWidthA,
-        flangeC: data.profileType === 'PP' ? 0 : data.flangeC,
-      }
-      const next = calculateExactResult(normalized)
-      setResult(next)
-      setServerError('')
-    } catch (error) {
-      setResult(null)
-      setServerError(error instanceof Error ? error.message : 'Не удалось выполнить расчет')
-    }
-  }, [watchedValues])
+          return {
+            wallHeight,
+            shelfWidthA,
+            wastePercentage: next.wastePercentage,
+          }
+        }),
+      )
+  }, [normalizedValues])
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_10%_20%,#eff6ff,transparent_40%),radial-gradient(circle_at_90%_0%,#fee2e2,transparent_35%),#f8fafc] px-4 py-8 font-sans text-slate-900">
@@ -223,11 +263,11 @@ export default function App() {
                   <p className="mt-2 text-xl font-bold text-slate-900">
                     {buildProfileName({
                       profileType,
-                      wallHeight: Number(watch('wallHeight')),
-                      shelfWidthA: Number(watch('shelfWidthA')),
-                      shelfWidthB: Number(watch('shelfWidthB')),
-                      flangeC: Number(watch('flangeC')),
-                      thickness: Number(watch('thickness')),
+                      wallHeight: Number(watchedValues.wallHeight),
+                      shelfWidthA: Number(watchedValues.shelfWidthA),
+                      shelfWidthB: Number(watchedValues.shelfWidthB),
+                      flangeC: Number(watchedValues.flangeC),
+                      thickness: Number(watchedValues.thickness),
                     })}
                   </p>
                 </div>
@@ -255,6 +295,77 @@ export default function App() {
             )}
           </section>
         </div>
+
+        <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold">График отхода</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Ось X: полка A, ось Y: высота стенки. Цвет показывает процент отхода.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs font-bold text-slate-700">
+              <span className="rounded-full bg-emerald-100 px-3 py-1">0-5%</span>
+              <span className="rounded-full bg-yellow-100 px-3 py-1">5-10%</span>
+              <span className="rounded-full bg-orange-100 px-3 py-1">10-20%</span>
+              <span className="rounded-full bg-rose-100 px-3 py-1">&gt;20%</span>
+            </div>
+          </div>
+
+          {!normalizedValues && (
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
+              Для графика нужны корректные параметры расчета.
+            </div>
+          )}
+
+          {normalizedValues && (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[720px] border-separate border-spacing-1">
+                <thead>
+                  <tr>
+                    <th className="w-20 px-2 py-2 text-right text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Высота
+                    </th>
+                    {shelfWidthTicks.map((shelfWidth) => (
+                      <th key={shelfWidth} className="px-2 py-2 text-center text-xs font-bold uppercase tracking-wider text-slate-500">
+                        {shelfWidth}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {wasteMap.map((row) => (
+                    <tr key={row[0].wallHeight}>
+                      <th className="px-2 py-1 text-right text-xs font-bold text-slate-500">{row[0].wallHeight}</th>
+                      {row.map((cell) => {
+                        const isSelected =
+                          cell.wallHeight === normalizedValues.wallHeight && cell.shelfWidthA === normalizedValues.shelfWidthA
+
+                        return (
+                          <td key={`${cell.wallHeight}-${cell.shelfWidthA}`} className="p-0.5">
+                            <div
+                              className={`flex h-9 min-w-16 items-center justify-center rounded-lg border text-xs font-extrabold ${
+                                isSelected ? 'border-slate-900 shadow-[0_0_0_2px_rgba(15,23,42,0.16)]' : 'border-white'
+                              }`}
+                              style={{
+                                backgroundColor: getWasteColor(cell.wastePercentage),
+                                color: getWasteTextColor(cell.wastePercentage),
+                              }}
+                              title={`Высота ${cell.wallHeight} мм, полка ${cell.shelfWidthA} мм: ${format(cell.wastePercentage)}%`}
+                            >
+                              {format(cell.wastePercentage, 1)}
+                            </div>
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="mt-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Полка A, мм</p>
+            </div>
+          )}
+        </section>
       </div>
     </main>
   )
