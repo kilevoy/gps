@@ -173,6 +173,13 @@ export default function App() {
     <main className="min-h-screen bg-[radial-gradient(circle_at_10%_20%,#eff6ff,transparent_40%),radial-gradient(circle_at_90%_0%,#fee2e2,transparent_35%),#f8fafc] px-4 py-8 font-sans text-slate-900">
       <div className="mx-auto max-w-6xl">
         <header className="mb-6 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xl backdrop-blur">
+          <a
+            href="https://kilevoy.github.io/"
+            title="Вернуться в портфолио"
+            className="mb-3 inline-block rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+          >
+            ← Портфолио
+          </a>
           <h1 className="font-['Exo_2'] text-2xl font-bold leading-tight sm:text-3xl">Калькулятор профилей ИНСИ</h1>
         </header>
 
