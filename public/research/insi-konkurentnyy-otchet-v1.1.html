@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ИНСИ — Конкурентное исследование: ЛСТК-профиль (живой документ)</title>
+<style>
+  :root{
+    --navy:#15314b; --navy2:#1e4263; --accent:#e87722; --accent-soft:#fdf0e4;
+    --bg:#f5f7fa; --card:#ffffff; --line:#dfe6ee; --txt:#243342; --muted:#64748b;
+    --green:#1a7f4e; --green-soft:#e7f5ee; --red:#b3382c; --red-soft:#fbeae8;
+    --amber:#9a6a00; --amber-soft:#fdf6e0;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:'Segoe UI', system-ui, -apple-system, Roboto, sans-serif; background:var(--bg); color:var(--txt); line-height:1.55; font-size:15px;}
+  .wrap{max-width:1160px; margin:0 auto; padding:0 24px;}
+
+  header.hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 70%); color:#fff; padding:42px 0 34px;}
+  header.hero h1{font-size:30px; font-weight:700; letter-spacing:.2px; margin-bottom:8px;}
+  header.hero .sub{color:#bcd0e2; font-size:16px; max-width:840px;}
+  .badges{margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;}
+  .badge{background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); border-radius:20px; padding:4px 14px; font-size:13px;}
+  .badge.acc{background:var(--accent); border-color:var(--accent); font-weight:600;}
+
+  nav{position:sticky; top:0; z-index:50; background:#fff; border-bottom:1px solid var(--line); box-shadow:0 1px 6px rgba(20,40,70,.06);}
+  nav .wrap{display:flex; gap:2px; overflow-x:auto; padding:0 24px;}
+  nav a{white-space:nowrap; padding:12px 14px; font-size:13.5px; color:var(--muted); text-decoration:none; border-bottom:3px solid transparent; font-weight:600;}
+  nav a:hover{color:var(--navy);}
+  nav a.hot{color:var(--accent);}
+
+  section{padding:40px 0 8px;}
+  h2{font-size:23px; color:var(--navy); margin-bottom:6px; display:flex; align-items:center; gap:10px;}
+  h2 .num{background:var(--navy); color:#fff; font-size:14px; width:30px; height:30px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; flex:none;}
+  .lead{color:var(--muted); margin-bottom:20px; max-width:920px;}
+  h3{font-size:16.5px; color:var(--navy); margin:22px 0 10px;}
+
+  .kpis{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin:18px 0 6px;}
+  .kpi{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 18px 14px; border-top:4px solid var(--accent);}
+  .kpi .v{font-size:30px; font-weight:800; color:var(--navy); line-height:1.1;}
+  .kpi .l{font-size:13px; color:var(--muted); margin-top:6px;}
+
+  .callout{border-radius:12px; padding:16px 18px; margin:16px 0; border:1px solid var(--line); background:var(--card);}
+  .callout.warn{background:var(--accent-soft); border-color:#f3cba4;}
+  .callout.ok{background:var(--green-soft); border-color:#bfe3cf;}
+  .callout b.t{display:block; margin-bottom:4px; color:var(--navy);}
+
+  .tbl{width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:12px 0 22px; font-size:13.5px;}
+  .tbl th{background:var(--navy); color:#fff; text-align:left; padding:9px 12px; font-weight:600; font-size:12.5px; text-transform:uppercase; letter-spacing:.3px;}
+  .tbl td{padding:9px 12px; border-top:1px solid var(--line); vertical-align:top;}
+  .tbl tr:nth-child(even) td{background:#fafcfe;}
+  .tbl td.hl, .tbl tr.me td{background:var(--accent-soft)!important; font-weight:600;}
+  .tbl .co{font-weight:700; color:var(--navy); white-space:nowrap;}
+
+  .pill{display:inline-block; border-radius:12px; padding:1px 10px; font-size:12px; font-weight:700;}
+  .pill.g{background:var(--green-soft); color:var(--green);}
+  .pill.r{background:var(--red-soft); color:var(--red);}
+  .pill.a{background:var(--amber-soft); color:var(--amber);}
+  .pill.n{background:#eef2f7; color:var(--muted);}
+
+  .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:16px; margin:14px 0 10px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px;}
+  .card h4{color:var(--navy); font-size:15.5px; margin-bottom:4px;}
+  .card .loc{font-size:12.5px; color:var(--muted); margin-bottom:10px;}
+  .card dl{font-size:13.5px;}
+  .card dt{font-weight:700; color:var(--navy2); margin-top:9px; font-size:12.5px; text-transform:uppercase; letter-spacing:.3px;}
+  .card dd{margin:2px 0 0;}
+  .card.bc{border-left:5px solid var(--accent);}
+  .card.bc ol{padding-left:18px; font-size:14px;}
+  .card.bc li{margin:8px 0;}
+  .threat{font-size:12px; font-weight:700; float:right;}
+
+  .gap{background:var(--card); border:1px solid var(--line); border-left:5px solid var(--green); border-radius:10px; padding:14px 16px; margin:10px 0;}
+  .gap.mid{border-left-color:var(--amber);}
+  .gap b.q{color:var(--navy);}
+  .gap .why{color:var(--muted); font-size:13.5px; margin-top:4px;}
+
+  ul.clean{padding-left:20px; margin:8px 0 16px;}
+  ul.clean li{margin:6px 0;}
+  ol.steps{padding-left:20px; margin:8px 0 16px;}
+  ol.steps li{margin:7px 0;}
+
+  .verlog{background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; margin:14px 0;}
+  .verlog .row{display:flex; gap:16px; padding:13px 18px; border-top:1px solid var(--line); align-items:baseline;}
+  .verlog .row:first-child{border-top:none;}
+  .verlog .v{font-weight:800; color:var(--accent); white-space:nowrap; min-width:118px;}
+  .verlog .planned{color:var(--muted);}
+  .verlog .planned .v{color:var(--muted);}
+
+  footer{margin-top:40px; padding:26px 0 40px; border-top:1px solid var(--line); color:var(--muted); font-size:12.5px;}
+  footer a{color:var(--navy2);}
+  a{color:var(--navy2);}
+  .src{font-size:12.5px; color:var(--muted);}
+
+  @media print{
+    nav{display:none;}
+    body{background:#fff; font-size:12px;}
+    .card,.kpi,.tbl,.gap,.callout,.verlog{break-inside:avoid; box-shadow:none;}
+    header.hero{padding:20px 0;}
+    section{padding:18px 0 4px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Конкурентное исследование: гнутый оцинкованный профиль, термопрофиль, ЛСТК</h1>
+    <div class="sub">ИНСИ (insi.ru), Челябинск · Рынок РФ + Казахстан + Беларусь · Производители кастомного холоднокатаного профиля 1,0–3,0&nbsp;мм</div>
+    <div class="badges">
+      <span class="badge acc">Версия 1.1 — живой документ</span>
+      <span class="badge">Исследование: 12 июня 2026</span>
+      <span class="badge">16 производителей · ТОП-8 разобраны · 5 battlecards</span>
+    </div>
+  </div>
+</header>
+
+<nav><div class="wrap">
+  <a href="#summary" class="hot">Резюме</a>
+  <a href="#map">1. Карта конкурентов</a>
+  <a href="#mkt">2. Маркетинг ТОП-8</a>
+  <a href="#matrix">3. Матрица</a>
+  <a href="#battle">4. Battlecards</a>
+  <a href="#gaps">5. Голубой океан</a>
+  <a href="#manual">6. Ручная проверка</a>
+  <a href="#log">7. Журнал документа</a>
+</div></nav>
+
+<div class="wrap">
+
+<!-- ============ РЕЗЮМЕ ============ -->
+<section id="summary">
+  <h2><span class="num">∑</span>Резюме для руководства</h2>
+  <p class="lead">Рынок делится на три лагеря: федеральные заводы полного цикла, для которых профиль — сырье для собственных зданий (Андромета, Северсталь, БалтПрофиль); специализированные профильные производства, продающие профиль как товар (Спецпрокат, ЛАСАР, АРС-Пром, ЛСТК-Самара); и региональные гибочные цеха «по чертежам».</p>
+
+  <div class="kpis">
+    <div class="kpi"><div class="v">0 из 16</div><div class="l">конкурентов публикуют цену за тонну. «От 140 000 ₽/т» — уникальная коммуникация для снабженцев</div></div>
+    <div class="kpi"><div class="v">1 мм</div><div class="l">шаг изготовления ИНСИ — по длине <b>и по всем размерам сечения</b> (h, b, отгиб). Лучшее у конкурентов — ±3 мм и только по длине</div></div>
+    <div class="kpi"><div class="v">0,8–2,0 мм</div><div class="l">типовой коридор толщин массовых игроков. Системного предложения 2,0–3,0 мм на Урале и в Поволжье нет</div></div>
+    <div class="kpi"><div class="v">2</div><div class="l">главные угрозы: Спецпрокат (открытый прайс, 0,7–4,0 мм) и АРС-Пром (диджитал + дилеры в нашем макрорегионе)</div></div>
+  </div>
+
+  <div class="callout warn">
+    <b class="t">Ключевая отстройка ИНСИ — параметрическое производство, а не сортамент</b>
+    Конкуренты продают сетку готовых типоразмеров (высоты 100/150/200/250&nbsp;мм, фиксированные полки). ИНСИ изготавливает профиль по чертежу заказчика с шагом 1&nbsp;мм по <b>каждому</b> параметру сечения: высота стенки (h), ширина каждой полки (b), отгиб — плюс любая длина. Это другой класс предложения: не «выберите ближайший типоразмер», а «получите ровно то сечение, которое заложил проектировщик». Внутренний расчетный инструмент (калькулятор развертки, раскроя из рулона, отхода, веса и цены от тонны для ПП/ПГС/ПЗ) уже существует — его публичная версия закрывает рекомендацию №1 этого отчета практически без затрат на разработку.
+  </div>
+
+  <div class="callout ok">
+    <b class="t">Свободные позиции, которые никто не занял</b>
+    Цена за тонну в открытую · параметрический кастом «по чертежам с шагом 1&nbsp;мм» · толщины 2–3&nbsp;мм как отдельная выгода · онлайн-калькулятор профиля · язык выгод для «1 класс цинкования» и «текучесть 350» (все пишут сухие цифры в глубине карточек) · Авито и email-маркетинг (почти пусто у всех, кроме АРС-Прома с email).
+  </div>
+</section>
+
+<!-- ============ 1. КАРТА ============ -->
+<section id="map">
+  <h2><span class="num">1</span>Карта конкурентов: 16 реальных производителей</h2>
+  <p class="lead">Только компании с собственными прокатными/профилегибочными линиями (не перепродавцы). Полнота данных по толщинам ограничена тем, что публикуют сами заводы.</p>
+
+  <h3>Федеральные производители</h3>
+  <table class="tbl">
+    <tr><th style="width:170px">Компания</th><th>Локация</th><th>Сортамент</th><th>Толщины</th><th>Особенности</th></tr>
+    <tr><td class="co">Андромета<br><span class="src">andrometa.ru</span></td><td>Обнинск, Калужская обл.</td><td>Z, C, Σ, U · 100–400 мм</td><td>1,2–3,5 мм</td><td>Сталь 350, цинк 275 г/м². Профилирование + пробивка + резка в размер + маркировка в одном цикле. Основной бизнес — здания СТЕРК®. Витрина в КЗ (andrometa.kz)</td></tr>
+    <tr><td class="co">Спецпрокат<br><span class="src">metall.ru</span></td><td>Лобня, МО</td><td>C, U, Z, Σ, шляпный, термо, гнутый уголок</td><td>0,7–4,0 мм</td><td>С 1991 г. Корейская и финская линии. Открытый прайс за пог. м. Пробивка отверстий до 22 мм. Семинары по ЛСТК</td></tr>
+    <tr><td class="co">БалтПрофиль<br><span class="src">baltprofile.ru</span></td><td>Санкт-Петербург</td><td>200+ типоразмеров: ПС/ТС, ПН/ТН, Z, ПШ, П60, С-балка</td><td>0,8–4,0 мм</td><td>Линия ЛА93. Полный цикл: производство + проектирование + строительство. Цены за штуку на витрине</td></tr>
+    <tr><td class="co">ЛАСАР<br><span class="src">lasar.ru</span></td><td>Липецк</td><td>Термопрофиль, широкий холодногнутый сортамент</td><td>~0,7–2,0 мм</td><td>Крупный профилировщик, гнутый профиль за пределами ЛСТК</td></tr>
+    <tr><td class="co">Сталь-Профиль<br><span class="src">lstk.ru</span></td><td>Санкт-Петербург</td><td>Профили ЛСТК, каркасы</td><td>н/д</td><td>Премиальный домен lstk.ru собирает брендовый трафик</td></tr>
+    <tr><td class="co">ПК Веста<br><span class="src">pkvesta.ru</span></td><td>Тула / Москва</td><td>Оцинкованный профиль, каркасы</td><td>н/д</td><td>Поставки РФ и СНГ (есть .kz и .uz). Онлайн-калькулятор веса каркаса здания</td></tr>
+    <tr><td class="co">Северсталь Стальные Решения</td><td>Череповец / федерально</td><td>ЛСТК-здания, профиль в комплектах</td><td>н/д</td><td>Гигант, но профиль россыпью не продает. Инженерные онлайн-калькуляторы для проектировщиков</td></tr>
+    <tr><td class="co">Полиметалл-СПб</td><td>Санкт-Петербург</td><td>Термопрофиль, сигма, ЛСТК</td><td>н/д</td><td>Производство + строительство</td></tr>
+    <tr><td class="co">Завод ЛСТК<br><span class="src">lstk.ltd</span></td><td>Липецк</td><td>ЛСТК-профиль, фабрика каркасов</td><td>н/д</td><td>Активны и в Москве</td></tr>
+  </table>
+
+  <h3>Урал и Поволжье — прямые региональные конкуренты</h3>
+  <table class="tbl">
+    <tr><th style="width:170px">Компания</th><th>Локация</th><th>Сортамент</th><th>Толщины</th><th>Особенности</th></tr>
+    <tr><td class="co">АРС-Пром<br><span class="src">arsprom.ru</span></td><td>Тюмень</td><td>ПС, ПН, ПНП, ПП, Z, У, ПСУ + полная термолинейка (ТС, ТН, ТНП, TZ)</td><td>0,8–2,0 мм<br><span class="src">(3,0 — один артикул ПС 300-80)</span></td><td>Сталь 350С ММК, цинк 275 г/м². С 1993 г. <b>Дилерская программа.</b> VK, Telegram, Rutube, интернет-магазин, email-маркетинг</td></tr>
+    <tr><td class="co">ТД Металлпромикс<br><span class="src">steelprofiles.ru</span></td><td>Екатеринбург</td><td>Строительные и термопрофили, сигма/ПГС, по чертежам</td><td>н/д</td><td>Прямой конкурент за запрос «по чертежам заказчика» на Урале</td></tr>
+    <tr><td class="co">ЗМК ЛСТК-УРАЛ<br><span class="src">lstk-ural.ru</span></td><td>Урал</td><td>Z-профиль, прогонные системы</td><td>н/д</td><td>Данных мало — проверить вручную</td></tr>
+    <tr><td class="co">ЛСТК-Самара<br><span class="src">lstk-samara.ru</span></td><td>Самара</td><td>ПП/ТПП, ПС/ТПС, ПШ (27/40), Z</td><td>0,8–2,0 мм</td><td>Точность длины ±3 мм. PDF-прайс. Доставка Поволжье + Зап. Казахстан</td></tr>
+    <tr><td class="co">Казанские стальные профили<br><span class="src">stalprof.ru</span></td><td>Казань</td><td>Линейка ПГС, ПГС-Сигма (ПГС-100…200, ПГС-160Σ)</td><td>н/д</td><td>Один из немногих в номенклатуре «ПГС» — лобовой конкурент по этому сортаменту</td></tr>
+    <tr><td class="co">Перфосталь<br><span class="src">perfosteel.ru</span></td><td>уточнить</td><td>Шляпный, корытный, С-образный по чертежам</td><td>н/д</td><td>Конкурент по ПШ и кастомной гибке</td></tr>
+    <tr><td class="co">ИжПрофиль<br><span class="src">izhprofile.ru</span></td><td>Ижевск</td><td>ПП, ПС, ПШ</td><td>н/д</td><td>Региональный игрок</td></tr>
+  </table>
+
+  <h3>Казахстан и Беларусь</h3>
+  <table class="tbl">
+    <tr><th style="width:170px">Компания</th><th>Локация</th><th>Примечание</th></tr>
+    <tr><td class="co">APROFIL <span class="src">a-profile.kz</span></td><td>Караганда / Алматы</td><td>ЛСТК и ЛМК, 25 лет опыта</td></tr>
+    <tr><td class="co">IQONIQ <span class="src">iqoniq.kz</span></td><td>Алматы</td><td>C/U-профили на финской линии Samesor, фокус на жилье</td></tr>
+    <tr><td class="co">АС-Профиль <span class="src">lstk-profile.by</span></td><td>Минск</td><td>Холоднокатаные оцинкованные профили, Z-профиль</td></tr>
+    <tr><td class="co">Арсенал <span class="src">arsenal.by</span></td><td>Минск</td><td>Сталь 350, цинк 275 г/м², <b>толщины 0,7–4,0 мм</b> — редкий «толстый» игрок</td></tr>
+    <tr><td class="co">АстраПрофиль <span class="src">astraprofil.by</span></td><td>Минск</td><td>Термопрофиль до 2,0 мм из российской стали С350, проектирование + монтаж</td></tr>
+  </table>
+  <p class="src">В Казахстане ИНСИ конкурирует также с российскими федералами: у Андрометы и ПК Весты есть казахстанские витрины.</p>
+</section>
+
+<!-- ============ 2. МАРКЕТИНГ ============ -->
+<section id="mkt">
+  <h2><span class="num">2</span>Рекламные активности ТОП-8</h2>
+  <p class="lead">Выводы по наблюдаемым сигналам: SEO-структура, метатеги, формы захвата, открытость цен, соцсети. Бюджеты Яндекс.Директ и частотности напрямую недоступны — план ручной проверки в разделе 6.</p>
+
+  <div class="cards">
+    <div class="card"><span class="threat pill r">УГРОЗА: ВЫСОКАЯ</span><h4>Спецпрокат (metall.ru)</h4><div class="loc">Лобня, МО · с 1991</div>
+      <dl>
+        <dt>Каналы</dt><dd>Мощное шаблонное SEO («Производство … заказать оптом от завода») под каждый тип профиля; VK; <b>семинары по ЛСТК</b> — обучающий маркетинг для проектировщиков (уникально на рынке)</dd>
+        <dt>Месседжи</dt><dd>Толщины 0,7–4,0 мм, перфорация, пробивка отверстий, С350/С250. Кастом есть, но спрятан: «по индивидуальным размерам — уточняйте у менеджеров»</dd>
+        <dt>Цены</dt><dd><b>Полностью открытый прайс за пог. м</b> с оптовой колонкой — самый прозрачный игрок. За тонну не пересчитывают. Калькуляторы только для забора/кровли</dd>
+      </dl>
+    </div>
+
+    <div class="card"><span class="threat pill r">УГРОЗА: ВЫСОКАЯ</span><h4>АРС-Пром</h4><div class="loc">Тюмень · с 1993 · наш макрорегион</div>
+      <dl>
+        <dt>Каналы</dt><dd>Самый широкий стек: VK, Telegram-канал, Rutube, блог, интернет-магазин, UTM-разметка, 2 счетчика Метрики, <b>email-маркетинг</b> (чекбокс рекламной рассылки в формах), раздел «Дилерам»</dd>
+        <dt>Месседжи</dt><dd>«Напрямую от производителя», «нарезка в размер по проекту, маркировка, готовые отверстия», «принцип конструктора», 350С ММК, цинк 275, класс К0. <b>Самый близкий к ИНСИ месседжинг</b>, но фактическая линейка — сетка типоразмеров 0,8–2,0 мм</dd>
+        <dt>Цены</dt><dd>Закрыты, «по запросу»</dd>
+      </dl>
+    </div>
+
+    <div class="card"><span class="threat pill a">УГРОЗА: СРЕДНЯЯ</span><h4>Андромета</h4><div class="loc">Обнинск · федеральный лидер</div>
+      <dl>
+        <dt>Каналы</dt><dd>Сильное SEO по зданиям и типам объектов; отдельная SEO-страница профилей Z/C/U/Σ; сайт закрыт от парсинга (зрелый трафик-менеджмент)</dd>
+        <dt>Месседжи</dt><dd>«Профили полностью готовы к монтажу» (пробивка + резка + маркировка). «В размер» закрывают, но под собственные здания, а не «по чертежам заказчика»</dd>
+        <dt>Цены</dt><dd>Не публикуют</dd>
+      </dl>
+    </div>
+
+    <div class="card"><span class="threat pill a">УГРОЗА: СРЕДНЯЯ</span><h4>БалтПрофиль</h4><div class="loc">Санкт-Петербург</div>
+      <dl>
+        <dt>Каналы</dt><dd>SEO + 4 формы захвата на странице; лид-магнит «Скачать проектную документацию» с сегментацией по типу компании; VK, WhatsApp/Telegram/MAX</dd>
+        <dt>Месседжи</dt><dd>«Свыше 200 типоразмеров», 0,8–4,0 мм, отдельная категория <b>стандартных профилей 3,0 м</b>. Кастом подается слабо</dd>
+        <dt>Цены</dt><dd>За штуку «от …» на витрине (Z от 374 ₽, стоечный от 267 ₽). За тонну — нет</dd>
+      </dl>
+    </div>
+
+    <div class="card"><span class="threat pill a">УГРОЗА: СРЕДНЯЯ (Поволжье)</span><h4>ЛСТК-Самара</h4><div class="loc">Самара</div>
+      <dl>
+        <dt>Каналы</dt><dd>Региональная SEO-сетка: посадочные под каждый регион доставки вплоть до 4 областей Казахстана; Rutube с монтажными видео; активный сбор отзывов на Яндекс.Картах</dd>
+        <dt>Месседжи</dt><dd>«Точность по проектам заказчика — погрешность 3 мм»; сертификаты и ТУ в открытом доступе. Та же номенклатура ПС/ПП/ПШ/ТПС/ТПП, что у ИНСИ</dd>
+        <dt>Цены</dt><dd>PDF-прайс с датой на сайте</dd>
+      </dl>
+    </div>
+
+    <div class="card"><span class="threat pill n">ДАННЫХ МАЛО</span><h4>ЛАСАР</h4><div class="loc">Липецк</div>
+      <dl><dt>Что видно</dt><dd>Каталожное SEO по холодногнутому профилю. Публичной рекламной активности по ЛСТК-профилю мало. Цены закрыты. Проверить Директ и VK вручную</dd></dl>
+    </div>
+
+    <div class="card"><span class="threat pill n">ДАННЫХ МАЛО</span><h4>ТД Металлпромикс</h4><div class="loc">Екатеринбург</div>
+      <dl><dt>Что видно</dt><dd>SEO под «производство профилей по чертежам заказчика Екатеринбург» — конкурирует с ИНСИ ровно за кастомный запрос в нашем макрорегионе. Размещения на B2B-каталогах (PromPortal)</dd></dl>
+    </div>
+
+    <div class="card"><span class="threat pill n">ДАННЫХ МАЛО</span><h4>Сталь-Профиль (lstk.ru)</h4><div class="loc">Санкт-Петербург</div>
+      <dl><dt>Что видно</dt><dd>Домен lstk.ru органически собирает брендовый запрос «ЛСТК». Глубину платных каналов проверить вручную</dd></dl>
+    </div>
+  </div>
+
+  <h3>Общие наблюдения по каналам</h3>
+  <ul class="clean">
+    <li><b>Авито</b> — производители почти не представлены (перекупы и б/у). Быстрая победа для дилерских регионов.</li>
+    <li><b>Отраслевые площадки</b> — PromPortal, satu.kz используют Металлпромикс и IQONIQ; Металлоторг/BuildMart по ЛСТК-профилю почти пусты.</li>
+    <li><b>Email-маркетинг</b> — явные признаки только у АРС-Прома. <b>Telegram-канал</b> ведет тоже только он.</li>
+    <li>Никто не переводит «1 класс цинкования» и «предел текучести 350» на язык выгод покупателя («не ржавеет 50 лет», «несет больше при том же весе») — формулировки свободны.</li>
+  </ul>
+</section>
+
+<!-- ============ 3. МАТРИЦА ============ -->
+<section id="matrix">
+  <h2><span class="num">3</span>Матрица позиционирования (по профилю, не по зданиям)</h2>
+  <table class="tbl">
+    <tr><th>Параметр</th><th>ИНСИ</th><th>Андромета</th><th>Спецпрокат</th><th>БалтПрофиль</th><th>АРС-Пром</th><th>ЛСТК-Самара</th><th>ЛАСАР</th><th>Металлпромикс</th></tr>
+    <tr><td><b>Кастом по чертежам</b></td><td class="hl">Параметрический: шаг 1 мм по h, b, отгибу и длине</td><td>«Готов к монтажу», под свои здания</td><td>Есть, «уточняйте у менеджеров»</td><td>Слабо; упор на стандартные 3,0 м</td><td>«В размер по проекту», но сетка типоразмеров</td><td>Типоразмеры, длина ±3 мм</td><td>Под заказ</td><td>«По чертежам заказчика»</td></tr>
+    <tr><td><b>Толщины</b></td><td class="hl">1,0–3,0 мм вся линейка</td><td>1,2–3,5</td><td>0,7–4,0</td><td>0,8–4,0</td><td>0,8–2,0 (3,0 — 1 артикул)</td><td>0,8–2,0</td><td>~0,7–2,0</td><td>н/д</td></tr>
+    <tr><td><b>Сталь / цинк</b></td><td class="hl">1 класс цинкования, текучесть 350</td><td>350, цинк 275</td><td>С350/С250</td><td>«горячеоцинк.» без класса</td><td>350С ММК, 275, К0</td><td>ТУ + сертификаты</td><td>н/д</td><td>н/д</td></tr>
+    <tr><td><b>Цена открыта</b></td><td class="hl">От 140 000 ₽/т</td><td><span class="pill r">нет</span></td><td><span class="pill g">за пог. м</span></td><td><span class="pill g">за штуку</span></td><td><span class="pill r">нет</span></td><td><span class="pill g">PDF</span></td><td><span class="pill r">нет</span></td><td><span class="pill a">частично</span></td></tr>
+    <tr><td><b>Цена за тонну</b></td><td class="hl">Да</td><td>нет</td><td>нет</td><td>нет</td><td>нет</td><td>нет</td><td>нет</td><td>нет</td></tr>
+    <tr><td><b>Модель</b></td><td class="hl">Материал + комплекты зданий</td><td>Полный цикл (СТЕРК)</td><td>Материал + стройка</td><td>Полный цикл</td><td>Материал + здания</td><td>Материал + каркасы</td><td>Материал</td><td>Материал</td></tr>
+    <tr><td><b>Дилерская программа</b></td><td class="hl">Да</td><td>Партнерство с Венталл</td><td>«Сотрудничество»</td><td>нет</td><td><span class="pill r">Да</span></td><td>нет</td><td>нет</td><td>нет</td></tr>
+    <tr><td><b>Онлайн-калькулятор профиля</b></td><td class="hl">Прототип готов (внутр.)</td><td>нет</td><td>только забор/кровля</td><td>нет</td><td>нет</td><td>форма «расчет здания»</td><td>нет</td><td>нет</td></tr>
+  </table>
+
+  <div class="callout">
+    <b class="t">Выводы из матрицы</b>
+    Никто не публикует цену за тонну. Параметрическое изготовление с шагом 1&nbsp;мм по всем размерам сечения не заявляет ни один конкурент — все продают сетку типоразмеров. В толщинах 2,0–3,0&nbsp;мм по всей линейке реальных соперников два, и оба в европейской части (Спецпрокат, Андромета). Половина рынка сама строит здания — конкурирует со своими покупателями; ИНСИ может занять позицию «поставщик, который не уведет ваш объект».
+  </div>
+</section>
+
+<!-- ============ 4. BATTLECARDS ============ -->
+<section id="battle">
+  <h2><span class="num">4</span>Sales battlecards для менеджеров</h2>
+  <p class="lead">Короткие аргументы для переговоров против ТОП-5. Опора: параметрический кастом с шагом 1 мм (сечение + длина), толщины 1,0–3,0 мм, 1 класс цинкования / текучесть 350, от 140 000 ₽/т, 30 лет производства, 15 000 т/год, доставка по РФ и СНГ.</p>
+
+  <div class="cards">
+    <div class="card bc"><h4>Против Андрометы</h4><ol>
+      <li>«Андромета — прежде всего завод зданий СТЕРК. Покупая у них профиль, вы кормите конкурента, который завтра придет к вашему заказчику с готовым зданием. ИНСИ поставляет профиль производителям БВЗ как партнер, а не соперник.»</li>
+      <li>«У них линейка от 1,2 мм, сетка типоразмеров и закрытые цены. У нас 1,0–3,0 мм, любое сечение по чертежу с шагом 1 мм и цена от 140 000 ₽/т — видна до звонка.»</li>
+      <li>«Из Челябинска плечо по Уралу, Сибири и Казахстану короче и дешевле, чем из Калужской области.»</li>
+    </ol></div>
+
+    <div class="card bc"><h4>Против Спецпроката</h4><ol>
+      <li>«Их прайс — за погонный метр стандартных сечений; индивидуальные размеры — "по запросу". У нас кастом — базовый режим: любое сечение и длина с шагом 1 мм, по понятной цене за тонну.»</li>
+      <li>«Спецпрокат в Лобне: за Уралом доставка съедает экономию. ИНСИ — Челябинск, 15 000 т/год.»</li>
+      <li>«Только сталь первого класса цинкования с текучестью 350 — без вариантов "С250 подешевле", которые потом всплывают в расчетах несущей способности.»</li>
+    </ol></div>
+
+    <div class="card bc"><h4>Против БалтПрофиля</h4><ol>
+      <li>«БалтПрофиль силен в стандартных профилях 3 м и тонких толщинах для малоэтажки. Для ферм, прогонов и ангаров нужна сталь 2–3 мм и длина под пролет — наша специализация.»</li>
+      <li>«Они продают и стройку, и проектирование — снова конкурент застройщика. Мы поставляем материал в размер и не претендуем на ваш контракт.»</li>
+      <li>«Цена за штуку удобна частнику; снабженец считает тонны — у нас от 140 000 ₽/т без пересчетов.»</li>
+    </ol></div>
+
+    <div class="card bc"><h4>Против АРС-Прома</h4><ol>
+      <li>«АРС-Пром говорит "в размер", но это нарезка длины в сетке готовых типоразмеров 0,8–2,0 мм. У ИНСИ под чертеж изготавливается само сечение — h, полки, отгиб с шагом 1 мм, сталь до 3,0 мм по всему сортаменту, включая ПГС, сигму, Z и шляпный.»</li>
+      <li>«Цены у них по запросу. У нас — от 140 000 ₽/т сразу.»</li>
+      <li>Для дилеров: «Объем 15 000 т/год — мы не остановим вашу отгрузку в сезон.»</li>
+    </ol></div>
+
+    <div class="card bc"><h4>Против ЛСТК-Самары</h4><ol>
+      <li>«Их точность — ±3 мм по длине и только типовые сечения. У нас шаг 1 мм и по длине, и по сечению: каркас собирается "конструктором", без подгонки по месту.»</li>
+      <li>«Толщины у них до 2,0 мм, высоты до 250 мм — для тяжелых прогонов и сельхозангаров с большими пролетами мало. У нас до 3,0 мм.»</li>
+      <li>«Металлобаза с одной линией против завода с 30-летней историей и 15 000 т/год — вопрос сроков при крупном заказе.»</li>
+    </ol></div>
+  </div>
+</section>
+
+<!-- ============ 5. ГОЛУБОЙ ОКЕАН ============ -->
+<section id="gaps">
+  <h2><span class="num">5</span>Контентные пробелы и «голубой океан»</h2>
+  <p class="lead">Проверено по фактической выдаче (июнь 2026). Частотности подтвердить в Wordstat — раздел 6.</p>
+
+  <div class="gap"><b class="q">«Калькулятор веса / стоимости профиля ЛСТК»</b> <span class="pill g">ПРИОРИТЕТ 1 · прототип уже есть</span>
+    <div class="why">Ни один производитель не дает калькулятор профиля по сечению и длине — в выдаче только сторонний lstkclub.ru и калькуляторы стоимости зданий. У ИНСИ расчетное ядро уже написано (развертка, раскрой из рулона, отход, вес пог. м, цена от тонны для ПП/ПГС/ПЗ, толщины 1,0–3,0). Публикация на insi.ru = захват лидов проектировщиков и снабженцев: посчитал тонны → увидел «от 140 000 ₽/т» → оставил заявку.</div></div>
+
+  <div class="gap"><b class="q">«ПГС-Сигма цена», «профиль ПГС»</b> <span class="pill g">НИЗКАЯ КОНКУРЕНЦИЯ</span>
+    <div class="why">Выдачу возглавляет сам ИНСИ + перекупы. Из производителей в номенклатуре ПГС — только Казанские стальные профили и УЗПР. Дожать контентом (таблицы веса, чертежи DWG, цены) и закрепить монополию на термин.</div></div>
+
+  <div class="gap"><b class="q">«Термопрофиль 2 мм», «профиль ЛСТК 2,5 / 3 мм»</b> <span class="pill g">НИЗКАЯ КОНКУРЕНЦИЯ</span>
+    <div class="why">Массовые игроки заканчиваются на 2,0 мм; никто не продвигает толщину как выгоду. Посадочные «под толщину» практически пусты в выдаче.</div></div>
+
+  <div class="gap"><b class="q">«Профиль для фермы 12 / 18 / 24 м» (профиль под пролет)</b> <span class="pill g">НИЗКАЯ КОНКУРЕНЦИЯ</span>
+    <div class="why">Запросы проектировщиков закрыты только форумами. Серия страниц с расчетными примерами — прямой выход на тех, кто закладывает марку в проект.</div></div>
+
+  <div class="gap"><b class="q">«ТПС vs ПС: сравнение термопрофиля и обычного»</b> <span class="pill g">СВОБОДНЫЙ ФОРМАТ</span>
+    <div class="why">Есть общие статьи «что такое термопрофиль», но нет инженерного сравнения с цифрами: теплопроводность, несущая способность, когда переплата оправдана.</div></div>
+
+  <div class="gap"><b class="q">«Сертификат соответствия термопрофиль», «ТУ на гнутый профиль»</b> <span class="pill g">НИЗКАЯ КОНКУРЕНЦИЯ</span>
+    <div class="why">Документы открыто публикуют только ЛСТК-Самара и частично АРС-Пром. Хаб документации собирает горячий трафик тендерных снабженцев. Дополнение: DWG/IFC-библиотека профилей — никто не дает, а это «закладка» марки ИНСИ в проекты.</div></div>
+
+  <div class="gap mid"><b class="q">«Изготовление Z-профиля на заказ», «гнутый профиль по чертежам»</b> <span class="pill a">КОНКУРЕНЦИЯ РЕГИОНАЛЬНАЯ</span>
+    <div class="why">Металлпромикс, ЭлитПроф, Перфосталь, Clive — но ни у кого нет посадочной с загрузкой чертежа + ценой за тонну. Дифференциация: «загрузите DWG/PDF — посчитаем за 1 час».</div></div>
+
+  <div class="gap mid"><b class="q">«Оцинкованный профиль цена за тонну»</b> <span class="pill a">БЕСХОЗНЫЙ ЗАПРОС</span>
+    <div class="why">Никто цену за тонну не публикует — выдача забита агрегаторами рулонной стали, а не готового профиля.</div></div>
+
+  <div class="callout warn"><b class="t">Где НЕ воевать в лоб</b>
+  «Профиль ЛСТК купить», «термопрофиль купить» в Москве и СПб — заняты Спецпрокатом, БалтПрофилем, Эталоном и агрегаторами. Обходить через регионы (Урал, Сибирь, Поволжье, КЗ) и через толщину/кастом.</div>
+
+  <h3>Рекомендации (по приоритету)</h3>
+  <ol class="steps">
+    <li><b>Опубликовать калькулятор профиля</b> на insi.ru (прототип готов) — лид-магнит, ссылочный магнит, отстройка.</li>
+    <li>Посадочные «под толщину» (2 / 2,5 / 3 мм) и «профиль для прогонов и ферм» с примерами пролетов.</li>
+    <li>Хаб документации: сертификаты, ТУ, DWG/IFC-библиотека для проектировщиков.</li>
+    <li>Статьи-сравнения: «ТПС vs ПС», «Z vs С vs Σ для прогонов», «1 класс цинкования: что это дает».</li>
+    <li>Авито-витрина в дилерских регионах (канал пуст от производителей).</li>
+    <li>Email-цепочка для проектировщиков и снабженцев — на рынке делает только АРС-Пром.</li>
+  </ol>
+</section>
+
+<!-- ============ 6. РУЧНАЯ ПРОВЕРКА ============ -->
+<section id="manual">
+  <h2><span class="num">6</span>Что проверить вручную</h2>
+  <p class="lead">Данные, недоступные из автоматического исследования.</p>
+  <ol class="steps">
+    <li><b>wordstat.yandex.ru</b> — частотности: «термопрофиль купить», «профиль ЛСТК производитель», «гнутый профиль на заказ», «профиль ПС 100х50», «ПГС-Сигма», «оцинкованный профиль цена за тонну», «калькулятор ЛСТК» + срезы по Уралу, Сибири, Поволжью.</li>
+    <li><b>Выдача Яндекса с рекламой</b> (из РФ, по Челябинску / Екатеринбургу / Москве): «профиль ПС купить производитель», «термопрофиль ЛСТК цена», «Z-профиль на заказ» — зафиксировать, кто стоит в Директе (поиск/РСЯ).</li>
+    <li><b>Metal-Expo</b> (metal-expo.ru) — экспоненты раздела ЛСТК/металлоконструкции: кто инвестирует в выставки.</li>
+    <li><b>VK: прозрачность рекламы</b> — активные рекламные записи сообществ АРС-Пром, БалтПрофиль, Спецпрокат.</li>
+    <li><b>Авито</b> по регионам — подтвердить отсутствие производителей.</li>
+    <li><b>Тайный покупатель</b>: lstk-ural.ru, lasar.ru, lstk.ru, steelprofiles.ru — снять реальные цены в пересчете на тонну.</li>
+    <li><b>Пересчет прайса Спецпроката</b> пог. м → ₽/т по таблицам веса — точная ценовая вилка против наших 140 000 ₽/т.</li>
+  </ol>
+</section>
+
+<!-- ============ 7. ЖУРНАЛ ============ -->
+<section id="log">
+  <h2><span class="num">7</span>Журнал документа и план</h2>
+  <p class="lead">Документ живой: каждый следующий этап работы добавляется новым разделом и фиксируется здесь.</p>
+  <div class="verlog">
+    <div class="row"><span class="v">v1.1 · 12.06.2026</span><span>Уточнение ключевого УТП: шаг 1 мм относится не только к длине, но и ко всем размерам сечения (h, ширина полок, отгиб) — параметрическое производство. Добавлен факт наличия готового прототипа калькулятора профиля (развертка, раскрой, отход, вес, цена от тонны).</span></div>
+    <div class="row"><span class="v">v1.0 · 12.06.2026</span><span>Базовое исследование: карта 16 производителей (РФ + КЗ + РБ), анализ маркетинга ТОП-8, матрица позиционирования, 5 battlecards, контентные пробелы, план ручной верификации.</span></div>
+    <div class="row planned"><span class="v">план</span><span>Wordstat-частотности и срез Директа по регионам → раздел 5 и 6 · Пересчет цен конкурентов в ₽/т → матрица · Полные battlecards с отработкой возражений · ТЗ и запуск публичного калькулятора · Медиаплан по свободным запросам.</span></div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap" style="padding:0;">
+    <b>Источники:</b>
+    <span class="src">
+      <a href="https://www.insi.ru/production/lstk-profil/">ИНСИ — ЛСТК-профиль</a> ·
+      <a href="https://andrometa.ru/steel-structures/ocinkovannye-lstk-profili-z-c-u-sigma">Андромета</a> ·
+      <a href="https://metall.ru/katalog/lstk">Спецпрокат</a> ·
+      <a href="https://www.baltprofile.ru/profili-lstk/">БалтПрофиль</a> ·
+      <a href="https://arsprom.ru/catalog/profil-lstk">АРС-Пром</a> ·
+      <a href="https://lstk-samara.ru/produkcia/ocinkovannyi-profil/">ЛСТК-Самара</a> ·
+      <a href="https://lasar.ru/catalog/profil-kholodnognutyy/construction-profile/termoprofil/">ЛАСАР</a> ·
+      <a href="https://lstk.ru/">Сталь-Профиль</a> ·
+      <a href="https://lstk.ltd/">Завод ЛСТК</a> ·
+      <a href="https://pkvesta.ru/production/otsinkovannyy-profil/">ПК Веста</a> ·
+      <a href="https://www.polimetall-spb.ru/">Полиметалл-СПб</a> ·
+      <a href="https://steelsolutions.severstal.com/bistrovozvodimie-zdaniya-i-sooryzheniya/zdaniya-iz-lstk/">Северсталь СР</a> ·
+      <a href="https://steelprofiles.ru/uslugi/proizvodstvo-profilej-po-chertezham-zakazchika">Металлпромикс</a> ·
+      <a href="https://lstk-ural.ru/services/metalloproduktsiya/z_profil_lstk/">ЛСТК-УРАЛ</a> ·
+      <a href="https://stalprof.ru/catalog/profil-gnutyy-stalnoy-pgs-s/">Казанские стальные профили</a> ·
+      <a href="https://perfosteel.ru/product/profili/">Перфосталь</a> ·
+      <a href="http://www.izhprofile.ru/proizvodstvo">ИжПрофиль</a> ·
+      <a href="https://a-profile.kz/">APROFIL</a> ·
+      <a href="https://iqoniq.kz/">IQONIQ</a> ·
+      <a href="https://lstk-profile.by/proizvodstvo-profilej-lstk">АС-Профиль</a> ·
+      <a href="https://arsenal.by/tehnologiya-lstk/prajs-na-profil-lstk">Арсенал</a> ·
+      <a href="https://astraprofil.by/profil/">АстраПрофиль</a> ·
+      <a href="https://github.com/kilevoy/gps">Калькулятор профилей (прототип ИНСИ)</a>
+    </span>
+    <p style="margin-top:12px;">Подготовлено для внутреннего использования ИНСИ · версия 1.1 · 12.06.2026 · документ пригоден для печати (Ctrl+P)</p>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
