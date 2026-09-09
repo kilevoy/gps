@@ -99,6 +99,8 @@ export interface GostProfileInput {
 }
 
 export function matchesGostLgs2Intersection(input: GostProfileInput): boolean {
+  if (input.profileType === 'SIGMA') return false
+
   const H = input.wallHeight
   const A = input.shelfWidthA
   const B = input.shelfWidthB
