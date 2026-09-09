@@ -1,3 +1,5 @@
+import { matchesGostLgs2Intersection } from './gostRules'
+
 export type ProfileType = 'PP' | 'PGS' | 'PZ'
 export type CalculatorMode = 'GOST' | 'LGS2'
 export type AvailabilityStatus = 'GOST_LGS2' | 'GOST_ONLY' | 'LGS2_NONSTANDARD' | 'UNAVAILABLE'
@@ -12,7 +14,6 @@ export interface UnifiedCalculatorInput {
   flangeC1: number
   flangeC2?: number
   pricePerTon: number
-  gostMatched?: boolean
 }
 
 export interface MaterialData {
@@ -27,6 +28,7 @@ export interface MaterialData {
 export interface UnifiedCalculationResult {
   status: AvailabilityStatus
   reasons: string[]
+  gostIntersectionMatched: boolean
   internalRadius: number
   neutralRadius: number
   theoreticalDevelopment: number
@@ -105,15 +107,6 @@ function developments(input: UnifiedCalculatorInput, material: MaterialData) {
     bends = 2
     technologicalStraights = (H - 2 * (rb + t)) + (A - (rb + t)) + (B - (rb + t))
     theoreticalRawLength = H + A + B
-  } else if (profileType === 'PGS') {
-    bends = 4
-    technologicalStraights =
-      (H - 2 * (rb + t)) +
-      (A - 2 * (rb + t)) +
-      (B - 2 * (rb + t)) +
-      (C1 - (rb + t)) +
-      (C2 - (rb + t))
-    theoreticalRawLength = H + A + B + C1 + C2
   } else {
     bends = 4
     technologicalStraights =
@@ -127,8 +120,6 @@ function developments(input: UnifiedCalculatorInput, material: MaterialData) {
 
   const arcLength = bends * (Math.PI * rn / 2)
   const technologicalDevelopment = technologicalStraights + arcLength
-
-  // Neutral-line geometry: each 90° bend replaces two tangent legs of radius rn with a quarter-circle.
   const theoreticalDevelopment = theoreticalRawLength - bends * 2 * rn + arcLength
 
   return { technologicalDevelopment, theoreticalDevelopment, rn }
@@ -139,11 +130,11 @@ export function calculateUnified(input: UnifiedCalculatorInput): UnifiedCalculat
   const { technologicalDevelopment, theoreticalDevelopment, rn } = developments(input, material)
   const reasons = validateLgs2(input, technologicalDevelopment)
   const lgs2StripAllowed = reasons.length === 0
-  const gostMatched = input.gostMatched === true
+  const gostIntersectionMatched = matchesGostLgs2Intersection(input)
 
   let status: AvailabilityStatus
-  if (gostMatched && lgs2StripAllowed) status = 'GOST_LGS2'
-  else if (gostMatched) status = 'GOST_ONLY'
+  if (gostIntersectionMatched && lgs2StripAllowed) status = 'GOST_LGS2'
+  else if (gostIntersectionMatched) status = 'GOST_ONLY'
   else if (lgs2StripAllowed) status = 'LGS2_NONSTANDARD'
   else status = 'UNAVAILABLE'
 
@@ -167,6 +158,7 @@ export function calculateUnified(input: UnifiedCalculatorInput): UnifiedCalculat
   return {
     status,
     reasons,
+    gostIntersectionMatched,
     internalRadius: material.rb,
     neutralRadius: rn,
     theoreticalDevelopment,
