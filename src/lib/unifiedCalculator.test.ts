@@ -13,7 +13,6 @@ describe('unified calculator regression', () => {
       flangeC1: 20,
       flangeC2: 20,
       pricePerTon: 160000,
-      gostMatched: false,
     })
 
     expect(r.internalRadius).toBe(3.5)
@@ -26,6 +25,8 @@ describe('unified calculator regression', () => {
     expect(r.countFromRoll).toBe(2)
     expect(r.wasteMm).toBeCloseTo(416.593, 2)
     expect(r.wastePercentage).toBeCloseTo(33.327, 2)
+    expect(r.gostIntersectionMatched).toBe(false)
+    expect(r.status).toBe('LGS2_NONSTANDARD')
   })
 
   it('uses 1250 mm mother coil for 2.5 mm steel', () => {
@@ -39,7 +40,6 @@ describe('unified calculator regression', () => {
       flangeC1: 0,
       pricePerTon: 160000,
     })
-
     expect(r.rollWidth).toBe(1250)
   })
 
@@ -54,7 +54,6 @@ describe('unified calculator regression', () => {
       flangeC1: 0,
       pricePerTon: 160000,
     })
-
     expect(r.rollWidth).toBe(1000)
   })
 
@@ -95,20 +94,55 @@ describe('unified calculator regression', () => {
     expect(r.reasons.join(' ')).toMatch(/180–625/)
   })
 
-  it('marks a GOST profile that is also producible on LGS-2', () => {
+  it('automatically recognises a profile from the GOST/LGS-2 intersection', () => {
     const r = calculateUnified({
       mode: 'GOST',
       profileType: 'PGS',
-      thickness: 1.5,
-      wallHeight: 250,
+      thickness: 2,
+      wallHeight: 200,
       shelfWidthA: 70,
       shelfWidthB: 70,
-      flangeC1: 20,
-      flangeC2: 20,
+      flangeC1: 18,
+      flangeC2: 18,
       pricePerTon: 160000,
-      gostMatched: true,
     })
 
+    expect(r.gostIntersectionMatched).toBe(true)
     expect(r.status).toBe('GOST_LGS2')
+  })
+
+  it('recognises asymmetric Z geometry from the GOST/LGS-2 intersection', () => {
+    const r = calculateUnified({
+      mode: 'GOST',
+      profileType: 'PZ',
+      thickness: 2,
+      wallHeight: 200,
+      shelfWidthA: 70,
+      shelfWidthB: 67,
+      flangeC1: 18,
+      flangeC2: 18,
+      pricePerTon: 160000,
+    })
+
+    expect(r.gostIntersectionMatched).toBe(true)
+    expect(r.status).toBe('GOST_LGS2')
+  })
+
+  it('classifies a producible arbitrary LGS-2 profile as nonstandard', () => {
+    const r = calculateUnified({
+      mode: 'LGS2',
+      profileType: 'PGS',
+      thickness: 1.5,
+      wallHeight: 211,
+      shelfWidthA: 71,
+      shelfWidthB: 71,
+      flangeC1: 19,
+      flangeC2: 19,
+      pricePerTon: 160000,
+    })
+
+    expect(r.lgs2StripAllowed).toBe(true)
+    expect(r.gostIntersectionMatched).toBe(false)
+    expect(r.status).toBe('LGS2_NONSTANDARD')
   })
 })
