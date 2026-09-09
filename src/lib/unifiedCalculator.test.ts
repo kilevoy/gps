@@ -27,6 +27,7 @@ describe('unified calculator regression', () => {
     expect(r.wastePercentage).toBeCloseTo(33.327, 2)
     expect(r.gostIntersectionMatched).toBe(false)
     expect(r.status).toBe('LGS2_NONSTANDARD')
+    expect(r.technologyModelValidated).toBe(true)
   })
 
   it('uses 1250 mm mother coil for 2.5 mm steel', () => {
@@ -144,5 +145,72 @@ describe('unified calculator regression', () => {
     expect(r.lgs2StripAllowed).toBe(true)
     expect(r.gostIntersectionMatched).toBe(false)
     expect(r.status).toBe('LGS2_NONSTANDARD')
+  })
+
+  it('calculates Sigma geometry from the LGS-2 specification', () => {
+    const r = calculateUnified({
+      mode: 'LGS2',
+      profileType: 'SIGMA',
+      thickness: 1.5,
+      wallHeight: 200,
+      shelfWidthA: 65,
+      shelfWidthB: 65,
+      flangeC1: 20,
+      flangeC2: 20,
+      pricePerTon: 160000,
+    })
+
+    expect(r.lgs2StripAllowed).toBe(true)
+    expect(r.gostIntersectionMatched).toBe(false)
+    expect(r.status).toBe('LGS2_NONSTANDARD')
+    expect(r.sigmaGeometry).toMatchObject({ S: 20, h1: 62, h2: 37, F: 12.5, E: 69 })
+    expect(r.technologicalDevelopment).toBeGreaterThan(180)
+    expect(r.technologicalDevelopment).toBeLessThan(625)
+    expect(r.theoreticalDevelopment).toBeGreaterThan(r.technologicalDevelopment)
+    expect(r.technologyModelValidated).toBe(false)
+    expect(r.technologyModelNote).toMatch(/техкарт/)
+  })
+
+  it('accepts all three fixed Sigma heights from the LGS-2 specification', () => {
+    const expected = [
+      [200, 62, 37],
+      [245, 72, 47],
+      [300, 102, 77],
+    ] as const
+
+    for (const [H, h1, h2] of expected) {
+      const r = calculateUnified({
+        mode: 'LGS2',
+        profileType: 'SIGMA',
+        thickness: 2,
+        wallHeight: H,
+        shelfWidthA: 80,
+        shelfWidthB: 80,
+        flangeC1: 20,
+        flangeC2: 20,
+        pricePerTon: 160000,
+      })
+      expect(r.sigmaGeometry?.h1).toBe(h1)
+      expect(r.sigmaGeometry?.h2).toBe(h2)
+      expect(r.reasons.join(' ')).not.toMatch(/H должен/)
+    }
+  })
+
+  it('rejects an unsupported Sigma height', () => {
+    const r = calculateUnified({
+      mode: 'LGS2',
+      profileType: 'SIGMA',
+      thickness: 2,
+      wallHeight: 220,
+      shelfWidthA: 80,
+      shelfWidthB: 80,
+      flangeC1: 20,
+      flangeC2: 20,
+      pricePerTon: 160000,
+    })
+
+    expect(r.lgs2StripAllowed).toBe(false)
+    expect(r.status).toBe('UNAVAILABLE')
+    expect(r.reasons.join(' ')).toMatch(/200, 245 или 300/)
   })
 })
