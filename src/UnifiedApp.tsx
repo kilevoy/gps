@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
-import { calculateUnified, type CalculatorMode, type ProfileType } from './lib/unifiedCalculator'
+import { calculateUnified, getSigmaGeometry, type CalculatorMode, type ProfileType } from './lib/unifiedCalculator'
 
 const thicknesses = [1, 1.2, 1.5, 2, 2.5, 3]
+const sigmaHeights = [200, 245, 300]
 
 function fmt(value: number, digits = 2) {
   return new Intl.NumberFormat('ru-RU', {
@@ -45,15 +46,28 @@ export default function UnifiedApp() {
   const [flangeC2, setFlangeC2] = useState(18)
   const [pricePerTon, setPricePerTon] = useState(145000)
 
+  function selectProfile(next: ProfileType) {
+    setProfileType(next)
+    if (next === 'SIGMA') {
+      setMode('LGS2')
+      setWallHeight(200)
+      setShelfWidthA(65)
+      setShelfWidthB(65)
+      setFlangeC1(20)
+      setFlangeC2(20)
+    }
+  }
+
   const result = useMemo(() => {
     try {
+      const symmetricShelf = profileType === 'PP' || profileType === 'PGS'
       return calculateUnified({
         mode,
         profileType,
         thickness,
         wallHeight,
         shelfWidthA,
-        shelfWidthB: profileType === 'PP' ? shelfWidthA : shelfWidthB,
+        shelfWidthB: symmetricShelf ? shelfWidthA : shelfWidthB,
         flangeC1: profileType === 'PP' ? 0 : flangeC1,
         flangeC2: profileType === 'PP' ? 0 : flangeC2,
         pricePerTon,
@@ -62,6 +76,8 @@ export default function UnifiedApp() {
       return null
     }
   }, [mode, profileType, thickness, wallHeight, shelfWidthA, shelfWidthB, flangeC1, flangeC2, pricePerTon])
+
+  const sketchB = profileType === 'PP' || profileType === 'PGS' ? shelfWidthA : shelfWidthB
 
   return (
     <main className="min-h-screen bg-slate-100 text-slate-950">
@@ -76,16 +92,21 @@ export default function UnifiedApp() {
               </p>
             </div>
             <div className="inline-flex rounded-2xl border border-slate-200 bg-slate-100 p-1.5">
-              {(['GOST', 'LGS2'] as CalculatorMode[]).map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setMode(item)}
-                  className={`rounded-xl px-5 py-2.5 text-sm font-extrabold transition ${mode === item ? 'bg-slate-900 text-white shadow' : 'text-slate-600 hover:text-slate-950'}`}
-                >
-                  {item === 'GOST' ? 'ГОСТ' : 'LGS-2'}
-                </button>
-              ))}
+              {(['GOST', 'LGS2'] as CalculatorMode[]).map((item) => {
+                const disabled = item === 'GOST' && profileType === 'SIGMA'
+                return (
+                  <button
+                    key={item}
+                    type="button"
+                    disabled={disabled}
+                    title={disabled ? 'Sigma сейчас доступна только в режиме LGS-2' : undefined}
+                    onClick={() => setMode(item)}
+                    className={`rounded-xl px-5 py-2.5 text-sm font-extrabold transition ${mode === item ? 'bg-slate-900 text-white shadow' : 'text-slate-600 hover:text-slate-950'} disabled:cursor-not-allowed disabled:opacity-35`}
+                  >
+                    {item === 'GOST' ? 'ГОСТ' : 'LGS-2'}
+                  </button>
+                )
+              })}
             </div>
           </div>
         </header>
@@ -100,10 +121,11 @@ export default function UnifiedApp() {
             <div className="space-y-4">
               <label className="block">
                 <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">Тип профиля</span>
-                <select className="input" value={profileType} onChange={(e) => setProfileType(e.target.value as ProfileType)}>
+                <select className="input" value={profileType} onChange={(e) => selectProfile(e.target.value as ProfileType)}>
                   <option value="PP">ПП / U</option>
                   <option value="PGS">ПГС / C</option>
                   <option value="PZ">ПZ / Z</option>
+                  <option value="SIGMA">ПГС-Сигма / Sigma · LGS-2</option>
                 </select>
               </label>
 
@@ -115,9 +137,19 @@ export default function UnifiedApp() {
               </label>
 
               <div className="grid grid-cols-2 gap-3">
-                <NumberField label="H, мм" value={wallHeight} setValue={setWallHeight} />
-                <NumberField label={profileType === 'PZ' ? 'B₁ / A, мм' : 'B / A, мм'} value={shelfWidthA} setValue={setShelfWidthA} />
-                {profileType === 'PZ' && <NumberField label="B₂, мм" value={shelfWidthB} setValue={setShelfWidthB} />}
+                {profileType === 'SIGMA' ? (
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-500">H, мм</span>
+                    <select className="input" value={wallHeight} onChange={(e) => setWallHeight(Number(e.target.value))}>
+                      {sigmaHeights.map((H) => <option key={H} value={H}>{H}</option>)}
+                    </select>
+                  </label>
+                ) : (
+                  <NumberField label="H, мм" value={wallHeight} setValue={setWallHeight} />
+                )}
+
+                <NumberField label={profileType === 'PZ' ? 'B₁ / A, мм' : profileType === 'SIGMA' ? 'A, мм' : 'B / A, мм'} value={shelfWidthA} setValue={setShelfWidthA} />
+                {(profileType === 'PZ' || profileType === 'SIGMA') && <NumberField label={profileType === 'SIGMA' ? 'B, мм' : 'B₂, мм'} value={shelfWidthB} setValue={setShelfWidthB} />}
                 {profileType !== 'PP' && <NumberField label="C₁, мм" value={flangeC1} setValue={setFlangeC1} />}
                 {profileType !== 'PP' && <NumberField label="C₂, мм" value={flangeC2} setValue={setFlangeC2} />}
               </div>
@@ -147,14 +179,30 @@ export default function UnifiedApp() {
                   {result.reasons.length > 0 && <div className="mt-3 text-sm">{result.reasons.join(' · ')}</div>}
                 </div>
 
+                {!result.technologyModelValidated && (
+                  <div className="rounded-[24px] border border-amber-300 bg-amber-50 p-5 text-amber-950">
+                    <div className="text-xs font-extrabold uppercase tracking-[0.16em] text-amber-700">Требуется производственная верификация</div>
+                    <div className="mt-2 text-sm leading-6">{result.technologyModelNote}</div>
+                  </div>
+                )}
+
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                   <Metric label="Теоретическая развёртка" value={`${fmt(result.theoreticalDevelopment)} мм`} note="Нейтральная линия, инженерная геометрия" />
-                  <Metric label="Ширина заготовки LGS-2" value={`${fmt(result.technologicalDevelopment)} мм`} note="Технологическая формула GPS / оборудование" accent />
+                  <Metric label="Ширина заготовки LGS-2" value={`${fmt(result.technologicalDevelopment)} мм`} note={result.technologyModelValidated ? 'Технологическая формула GPS / оборудование' : 'Предварительная модель Sigma — до сверки с техкартой'} accent />
                   <Metric label="Теоретическая масса" value={`${fmt(result.theoreticalWeightPerMeter, 3)} кг/м`} note="Номинальная толщина, ρ = 7850 кг/м³" />
                   <Metric label="Производственная масса" value={`${fmt(result.productionWeightPerMeter, 3)} кг/м`} note="Фактический удельный вес GPS / 1С" accent />
                 </div>
 
-                <div className="grid gap-6 xl:grid-cols-2">
+                <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+                  <ProfileSketch
+                    profileType={profileType}
+                    H={wallHeight}
+                    A={shelfWidthA}
+                    B={sketchB}
+                    C1={profileType === 'PP' ? 0 : flangeC1}
+                    C2={profileType === 'PP' ? 0 : flangeC2}
+                  />
+
                   <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 className="text-lg font-extrabold">Сравнение моделей</h2>
                     <div className="mt-5 space-y-4">
@@ -162,19 +210,20 @@ export default function UnifiedApp() {
                       <CompareRow label="Δ массы" value={`${fmt(result.weightDeltaKgPerM, 3)} кг/м`} sub={`${fmt(result.weightDeltaPct)} %`} />
                       <CompareRow label="Внутренний радиус R" value={`${fmt(result.internalRadius, 1)} мм`} sub={`Rнейтр. ${fmt(result.neutralRadius, 2)} мм`} />
                       <CompareRow label="Удельный вес производства" value={`${fmt(result.productionKgM2, 5)} кг/м²`} sub={`теория ${fmt(result.theoreticalKgM2, 5)} кг/м²`} />
+                      {result.sigmaGeometry && <CompareRow label="Sigma S / F" value={`${fmt(result.sigmaGeometry.S, 0)} / ${fmt(result.sigmaGeometry.F, 1)} мм`} sub={`h₁ ${result.sigmaGeometry.h1} · h₂ ${result.sigmaGeometry.h2}`} />}
                     </div>
                   </div>
+                </div>
 
-                  <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 className="text-lg font-extrabold">Раскрой и цена</h2>
-                    <div className="mt-5 grid grid-cols-2 gap-3">
-                      <SmallMetric label="Материнский рулон" value={`${fmt(result.rollWidth, 0)} мм`} />
-                      <SmallMetric label="Полос из рулона" value={`${result.countFromRoll} шт.`} />
-                      <SmallMetric label="Остаток" value={`${fmt(result.wasteMm)} мм`} />
-                      <SmallMetric label="Отход" value={`${fmt(result.wastePercentage)} %`} />
-                      <SmallMetric label="Цена без отхода" value={`${fmt(result.priceNoWaste)} ₽/м`} />
-                      <SmallMetric label="Цена с отходом" value={`${fmt(result.priceWithWaste)} ₽/м`} />
-                    </div>
+                <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+                  <h2 className="text-lg font-extrabold">Раскрой и цена</h2>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                    <SmallMetric label="Материнский рулон" value={`${fmt(result.rollWidth, 0)} мм`} />
+                    <SmallMetric label="Полос из рулона" value={`${result.countFromRoll} шт.`} />
+                    <SmallMetric label="Остаток" value={`${fmt(result.wasteMm)} мм`} />
+                    <SmallMetric label="Отход" value={`${fmt(result.wastePercentage)} %`} />
+                    <SmallMetric label="Цена без отхода" value={`${fmt(result.priceNoWaste)} ₽/м`} />
+                    <SmallMetric label="Цена с отходом" value={`${fmt(result.priceWithWaste)} ₽/м`} />
                   </div>
                 </div>
               </>
@@ -185,6 +234,56 @@ export default function UnifiedApp() {
         </div>
       </div>
     </main>
+  )
+}
+
+function ProfileSketch({ profileType, H, A, B, C1, C2 }: { profileType: ProfileType; H: number; A: number; B: number; C1: number; C2: number }) {
+  const points = useMemo(() => {
+    if (profileType === 'PP') return [[A, 0], [0, 0], [0, H], [B, H]] as [number, number][]
+    if (profileType === 'PGS') return [[A, C1], [A, 0], [0, 0], [0, H], [B, H], [B, H - C2]] as [number, number][]
+    if (profileType === 'PZ') return [[-B, C2], [-B, 0], [0, 0], [0, H], [A, H], [A, H - C1]] as [number, number][]
+
+    const g = getSigmaGeometry(H)
+    if (!g) return [] as [number, number][]
+    return [
+      [-C1, A], [0, A], [0, 0], [g.E, 0], [g.E + g.F, g.S],
+      [g.E + g.F + g.h2, g.S], [g.E + 2 * g.F + g.h2, 0], [H, 0], [H, B], [H + C2, B],
+    ] as [number, number][]
+  }, [profileType, H, A, B, C1, C2])
+
+  if (!points.length) return null
+  const xs = points.map((p) => p[0])
+  const ys = points.map((p) => p[1])
+  const minX = Math.min(...xs)
+  const maxX = Math.max(...xs)
+  const minY = Math.min(...ys)
+  const maxY = Math.max(...ys)
+  const width = Math.max(maxX - minX, 1)
+  const height = Math.max(maxY - minY, 1)
+  const padX = Math.max(width * 0.16, 20)
+  const padY = Math.max(height * 0.18, 20)
+  const svgPoints = points.map(([x, y]) => `${x},${-y}`).join(' ')
+  const viewBox = `${minX - padX} ${-maxY - padY} ${width + padX * 2} ${height + padY * 2}`
+
+  return (
+    <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-extrabold">Живое сечение</h2>
+          <p className="mt-1 text-xs text-slate-500">Номинальная геометрия · размеры меняются вместе с вводом</p>
+        </div>
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">{profileType === 'SIGMA' ? 'Sigma LGS-2' : profileType}</span>
+      </div>
+      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-[linear-gradient(#e2e8f0_1px,transparent_1px),linear-gradient(90deg,#e2e8f0_1px,transparent_1px)] bg-[size:20px_20px] p-3">
+        <svg viewBox={viewBox} className="h-[280px] w-full" role="img" aria-label={`Сечение профиля ${profileType}`}>
+          <polyline points={svgPoints} fill="none" stroke="currentColor" strokeWidth={Math.max(width, height) / 100} strokeLinecap="round" strokeLinejoin="round" className="text-slate-900" />
+          {points.map(([x, y], index) => <circle key={index} cx={x} cy={-y} r={Math.max(width, height) / 120} className="fill-orange-600" />)}
+        </svg>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs font-semibold text-slate-500">
+        <span>H {H} мм</span><span>A {A} мм</span>{profileType !== 'PGS' && profileType !== 'PP' && <span>B {B} мм</span>}{profileType !== 'PP' && <span>C₁/C₂ {C1}/{C2} мм</span>}
+      </div>
+    </div>
   )
 }
 
