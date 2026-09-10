@@ -234,27 +234,37 @@ export default function App() {
               </label>
 
               {showRollWidthSelector && (
-                <label className="block space-y-1">
-                  <span className="text-sm font-semibold text-slate-700">Ширина рулона, мм</span>
-                  <select
-                    className="input"
-                    value={selectedRollWidth}
-                    onChange={(event) => {
-                      setValue('rollWidthOverride', Number(event.target.value), {
-                        shouldDirty: true,
-                        shouldTouch: true,
-                        shouldValidate: true,
-                      })
-                    }}
-                  >
+                <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="text-sm font-extrabold text-indigo-950">Ширина рулона</span>
+                    <span className="rounded-full bg-white px-2 py-1 text-xs font-extrabold text-indigo-900 shadow-sm">
+                      {selectedRollWidth} мм
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
                     {rollWidthOptions.map((rollWidth) => (
-                      <option key={rollWidth} value={rollWidth}>
-                        {rollWidth}
-                      </option>
+                      <button
+                        key={rollWidth}
+                        className={`rounded-xl border px-3 py-2 text-sm font-extrabold transition ${
+                          selectedRollWidth === rollWidth
+                            ? 'border-indigo-700 bg-indigo-700 text-white shadow-sm'
+                            : 'border-indigo-200 bg-white text-indigo-900 hover:border-indigo-500'
+                        }`}
+                        type="button"
+                        onClick={() => {
+                          setValue('rollWidthOverride', rollWidth, {
+                            shouldDirty: true,
+                            shouldTouch: true,
+                            shouldValidate: true,
+                          })
+                        }}
+                      >
+                        {rollWidth} мм
+                      </button>
                     ))}
-                  </select>
-                  <p className="text-xs font-medium text-slate-500">Для 2,5 мм можно сравнить рулон 1000 и 1250 мм.</p>
-                </label>
+                  </div>
+                  <p className="mt-2 text-xs font-medium text-slate-500">Для 2,5 мм можно сравнить рулон 1000 и 1250 мм.</p>
+                </div>
               )}
 
               <label className="block space-y-1">
