@@ -3,6 +3,7 @@ export type ProfileType = 'PP' | 'PGS' | 'PZ'
 export interface CalculatorInput {
   profileType: ProfileType
   thickness: number
+  rollWidthOverride?: number
   wallHeight: number
   shelfWidthA: number
   shelfWidthB: number
@@ -38,6 +39,10 @@ const MATERIALS: Record<string, MaterialData> = {
   '3': { t: 3.0, rb: 5.0, rollWidth: 1000, specificWeight: 23.5 },
 }
 
+const ROLL_WIDTH_OPTIONS_BY_THICKNESS: Record<string, readonly number[]> = {
+  '2.5': [1000, 1250],
+}
+
 function getMaterialData(thickness: number): MaterialData {
   const key = Number(thickness).toString()
   const material = MATERIALS[key]
@@ -47,8 +52,28 @@ function getMaterialData(thickness: number): MaterialData {
   return material
 }
 
+export function getRollWidthOptions(thickness: number): readonly number[] {
+  const material = getMaterialData(thickness)
+  return ROLL_WIDTH_OPTIONS_BY_THICKNESS[Number(thickness).toString()] ?? [material.rollWidth]
+}
+
+function resolveRollWidth(input: CalculatorInput, material: MaterialData): number {
+  const rollWidthOverride = input.rollWidthOverride
+  if (rollWidthOverride === undefined || Number.isNaN(rollWidthOverride)) {
+    return material.rollWidth
+  }
+
+  const allowedRollWidths = getRollWidthOptions(input.thickness)
+  if (!allowedRollWidths.includes(rollWidthOverride)) {
+    throw new Error(`Unsupported roll width: ${rollWidthOverride} for thickness ${input.thickness}`)
+  }
+
+  return rollWidthOverride
+}
+
 export function calculateExactResult(input: CalculatorInput): CalculationResult {
   const material = getMaterialData(input.thickness)
+  const rollWidth = resolveRollWidth(input, material)
   const t = material.t
   const rb = material.rb
 
@@ -76,18 +101,18 @@ export function calculateExactResult(input: CalculatorInput): CalculationResult 
   const l0 = bendsCount * (Math.PI * rcp / 2)
   const razvertka = l0 + l1
 
-  const countFromRoll = material.rollWidth > 0 ? Math.floor(material.rollWidth / razvertka) : 0
-  const wasteMm = material.rollWidth > 0 ? material.rollWidth - countFromRoll * razvertka : 0
-  const wastePercentage = material.rollWidth > 0 ? (wasteMm / material.rollWidth) * 100 : 100
+  const countFromRoll = rollWidth > 0 ? Math.floor(rollWidth / razvertka) : 0
+  const wasteMm = rollWidth > 0 ? rollWidth - countFromRoll * razvertka : 0
+  const wastePercentage = rollWidth > 0 ? (wasteMm / rollWidth) * 100 : 100
   const weightPerMeter = (razvertka / 1000) * material.specificWeight
 
   const pricePerKg = input.pricePerTon / 1000
   const priceNoWaste = weightPerMeter * pricePerKg
-  const rollPricePerM = material.specificWeight * (material.rollWidth / 1000) * pricePerKg
+  const rollPricePerM = material.specificWeight * (rollWidth / 1000) * pricePerKg
   const priceWithWaste = countFromRoll > 0 ? rollPricePerM / countFromRoll : priceNoWaste
 
   return {
-    rollWidth: material.rollWidth,
+    rollWidth,
     razvertka,
     countFromRoll,
     wasteMm,

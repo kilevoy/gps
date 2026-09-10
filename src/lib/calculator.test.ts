@@ -33,6 +33,51 @@ describe('calculateExactResult', () => {
     expect(result.priceWithWaste).toBeCloseTo(615.36, 3)
   })
 
+  it('uses the default 1000 mm roll for 2.5 mm thickness', () => {
+    const result = calculateExactResult({
+      profileType: 'PP',
+      thickness: 2.5,
+      wallHeight: 200,
+      shelfWidthA: 60,
+      shelfWidthB: 60,
+      flangeC: 0,
+      pricePerTon: 160000,
+    })
+
+    expect(result.rollWidth).toBe(1000)
+  })
+
+  it('allows 1250 mm roll override for 2.5 mm thickness', () => {
+    const result = calculateExactResult({
+      profileType: 'PP',
+      thickness: 2.5,
+      rollWidthOverride: 1250,
+      wallHeight: 200,
+      shelfWidthA: 60,
+      shelfWidthB: 60,
+      flangeC: 0,
+      pricePerTon: 160000,
+    })
+
+    expect(result.rollWidth).toBe(1250)
+    expect(result.countFromRoll).toBe(4)
+  })
+
+  it('throws when roll width override is not supported for the thickness', () => {
+    expect(() =>
+      calculateExactResult({
+        profileType: 'PP',
+        thickness: 3,
+        rollWidthOverride: 1250,
+        wallHeight: 200,
+        shelfWidthA: 60,
+        shelfWidthB: 60,
+        flangeC: 0,
+        pricePerTon: 160000,
+      }),
+    ).toThrow(/Unsupported roll width/)
+  })
+
   it('throws when thickness is not supported', () => {
     expect(() =>
       calculateExactResult({

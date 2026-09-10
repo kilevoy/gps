@@ -1,12 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
-import { calculateExactResult, type CalculationResult, type ProfileType } from './lib/calculator'
+import { calculateExactResult, getRollWidthOptions, type CalculationResult, type ProfileType } from './lib/calculator'
 
 const formSchema = z.object({
   profileType: z.enum(['PP', 'PGS', 'PZ']),
   thickness: z.number().refine((v) => [1, 1.2, 1.5, 2, 2.5, 3].includes(v), 'Недопустимая толщина'),
+  rollWidthOverride: z.number().optional(),
   wallHeight: z.number().min(100, 'Высота: 100-350 мм').max(350, 'Высота: 100-350 мм'),
   shelfWidthA: z.number().min(40, 'Полка A: 40-100 мм').max(100, 'Полка A: 40-100 мм'),
   shelfWidthB: z.number().min(40, 'Полка B: 40-95 мм').max(95, 'Полка B: 40-95 мм'),
@@ -107,6 +108,31 @@ export default function App() {
   const showFlangeC = profileType !== 'PP'
   const flangeCValue = Number(watchedValues.flangeC ?? flangeMin)
   const selectedThickness = Number(watchedValues.thickness ?? 0)
+  const rollWidthOptions = useMemo(() => {
+    try {
+      return selectedThickness > 0 ? getRollWidthOptions(selectedThickness) : []
+    } catch {
+      return []
+    }
+  }, [selectedThickness])
+  const selectedRollWidth = Number(watchedValues.rollWidthOverride ?? rollWidthOptions[0] ?? 0)
+  const showRollWidthSelector = selectedThickness === 2.5 && rollWidthOptions.length > 1
+
+  useEffect(() => {
+    if (rollWidthOptions.length === 0) return
+
+    const currentRollWidth = watchedValues.rollWidthOverride
+    if (rollWidthOptions.length === 1) {
+      if (currentRollWidth !== undefined) {
+        setValue('rollWidthOverride', undefined, { shouldDirty: true, shouldValidate: true })
+      }
+      return
+    }
+
+    if (currentRollWidth === undefined || !rollWidthOptions.includes(currentRollWidth)) {
+      setValue('rollWidthOverride', rollWidthOptions[0], { shouldDirty: false, shouldValidate: true })
+    }
+  }, [rollWidthOptions, setValue, watchedValues.rollWidthOverride])
 
   const normalizedValues = useMemo(() => {
     const parsed = formSchema.safeParse(watchedValues)
@@ -206,6 +232,30 @@ export default function App() {
                   ))}
                 </select>
               </label>
+
+              {showRollWidthSelector && (
+                <label className="block space-y-1">
+                  <span className="text-sm font-semibold text-slate-700">Ширина рулона, мм</span>
+                  <select
+                    className="input"
+                    value={selectedRollWidth}
+                    onChange={(event) => {
+                      setValue('rollWidthOverride', Number(event.target.value), {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                        shouldValidate: true,
+                      })
+                    }}
+                  >
+                    {rollWidthOptions.map((rollWidth) => (
+                      <option key={rollWidth} value={rollWidth}>
+                        {rollWidth}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs font-medium text-slate-500">Для 2,5 мм можно сравнить рулон 1000 и 1250 мм.</p>
+                </label>
+              )}
 
               <label className="block space-y-1">
                 <span className="text-sm font-semibold text-slate-700">Высота стенки, мм</span>
@@ -325,6 +375,11 @@ export default function App() {
               <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
                 t {formatThickness(selectedThickness)} мм
               </span>
+              {result && (
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
+                  рулон {format(result.rollWidth, 0)} мм
+                </span>
+              )}
               {showFlangeC && (
                 <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-extrabold text-amber-900">
                   C {format(flangeCValue, 0)} мм
