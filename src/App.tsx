@@ -69,16 +69,17 @@ function buildProfileName(params: {
   const { profileType, wallHeight, shelfWidthA, shelfWidthB, flangeC, thickness } = params
   const profile = labelByProfile(profileType)
   const t = formatThickness(thickness)
+  const steelGrade = thickness > 1 ? ' П350' : ''
 
   if (profileType === 'PP') {
-    return `${profile} ${wallHeight}x${shelfWidthA} без перфор. ${t} (Оцинк.)`
+    return `${profile} ${wallHeight}x${shelfWidthA} без перфор. ${t}${steelGrade} (Оцинк.)`
   }
 
   if (profileType === 'PGS') {
-    return `${profile} ${wallHeight}x${shelfWidthA}x${flangeC} без перфор. ${t} (Оцинк.)`
+    return `${profile} ${wallHeight}x${shelfWidthA}x${flangeC} без перфор. ${t}${steelGrade} (Оцинк.)`
   }
 
-  return `${profile} ${wallHeight}x${shelfWidthA}x${shelfWidthB}x${flangeC} без перфор. ${t} (Оцинк.)`
+  return `${profile} ${wallHeight}x${shelfWidthA}x${shelfWidthB}x${flangeC} без перфор. ${t}${steelGrade} (Оцинк.)`
 }
 
 export default function App() {
