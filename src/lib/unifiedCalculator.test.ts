@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { calculateUnified } from './unifiedCalculator'
+import { calculateExactResult } from './calculator'
+import { calculateUnified, type ProfileType } from './unifiedCalculator'
 
 describe('unified calculator regression', () => {
   it('preserves GPS technological result for PGS 250x70x70x20 t1.5', () => {
@@ -145,6 +146,85 @@ describe('unified calculator regression', () => {
     expect(r.lgs2StripAllowed).toBe(true)
     expect(r.gostIntersectionMatched).toBe(false)
     expect(r.status).toBe('LGS2_NONSTANDARD')
+  })
+
+  it('matches the legacy GPS engine across all thicknesses and representative PP/PGS/PZ limits', () => {
+    const thicknesses = [1, 1.2, 1.5, 2, 2.5, 3]
+    const geometries: Array<{
+      profileType: ProfileType
+      wallHeight: number
+      shelfWidthA: number
+      shelfWidthB: number
+      flangeC: number
+    }> = [
+      { profileType: 'PP', wallHeight: 100, shelfWidthA: 40, shelfWidthB: 40, flangeC: 0 },
+      { profileType: 'PP', wallHeight: 225, shelfWidthA: 70, shelfWidthB: 70, flangeC: 0 },
+      { profileType: 'PP', wallHeight: 350, shelfWidthA: 100, shelfWidthB: 100, flangeC: 0 },
+      { profileType: 'PGS', wallHeight: 100, shelfWidthA: 40, shelfWidthB: 40, flangeC: 13 },
+      { profileType: 'PGS', wallHeight: 225, shelfWidthA: 70, shelfWidthB: 70, flangeC: 20 },
+      { profileType: 'PGS', wallHeight: 350, shelfWidthA: 100, shelfWidthB: 100, flangeC: 27 },
+      { profileType: 'PZ', wallHeight: 100, shelfWidthA: 40, shelfWidthB: 40, flangeC: 13 },
+      { profileType: 'PZ', wallHeight: 225, shelfWidthA: 70, shelfWidthB: 65, flangeC: 20 },
+      { profileType: 'PZ', wallHeight: 350, shelfWidthA: 100, shelfWidthB: 95, flangeC: 27 },
+    ]
+
+    for (const thickness of thicknesses) {
+      for (const g of geometries) {
+        const legacy = calculateExactResult({
+          ...g,
+          thickness,
+          pricePerTon: 160000,
+          // Production rule from the long-running Excel calculator:
+          // 1.0–2.5 mm -> 1250 mm mother coil; 3.0 mm -> 1000 mm.
+          rollWidthOverride: thickness === 2.5 ? 1250 : undefined,
+        })
+
+        const unified = calculateUnified({
+          mode: 'LGS2',
+          profileType: g.profileType,
+          thickness,
+          wallHeight: g.wallHeight,
+          shelfWidthA: g.shelfWidthA,
+          shelfWidthB: g.shelfWidthB,
+          flangeC1: g.flangeC,
+          flangeC2: g.flangeC,
+          pricePerTon: 160000,
+        })
+
+        expect(unified.technologicalDevelopment).toBeCloseTo(legacy.razvertka, 9)
+        expect(unified.productionWeightPerMeter).toBeCloseTo(legacy.weightPerMeter, 9)
+        expect(unified.rollWidth).toBe(legacy.rollWidth)
+        expect(unified.countFromRoll).toBe(legacy.countFromRoll)
+        expect(unified.wasteMm).toBeCloseTo(legacy.wasteMm, 9)
+        expect(unified.wastePercentage).toBeCloseTo(legacy.wastePercentage, 9)
+        expect(unified.priceNoWaste).toBeCloseTo(legacy.priceNoWaste, 9)
+        expect(unified.priceWithWaste).toBeCloseTo(legacy.priceWithWaste, 9)
+        expect(unified.technologyModelValidated).toBe(true)
+      }
+    }
+  })
+
+  it('keeps the expected theoretical-vs-technological development delta for PP/PGS/PZ', () => {
+    const cases: Array<{ profileType: ProfileType; expectedDelta: number; flangeC: number }> = [
+      { profileType: 'PP', expectedDelta: -3, flangeC: 0 },
+      { profileType: 'PGS', expectedDelta: -6, flangeC: 20 },
+      { profileType: 'PZ', expectedDelta: -6, flangeC: 20 },
+    ]
+
+    for (const c of cases) {
+      const r = calculateUnified({
+        mode: 'LGS2',
+        profileType: c.profileType,
+        thickness: 1.5,
+        wallHeight: 200,
+        shelfWidthA: 70,
+        shelfWidthB: c.profileType === 'PZ' ? 65 : 70,
+        flangeC1: c.flangeC,
+        flangeC2: c.flangeC,
+        pricePerTon: 160000,
+      })
+      expect(r.developmentDeltaMm).toBeCloseTo(c.expectedDelta, 9)
+    }
   })
 
   it('calculates Sigma geometry from the LGS-2 specification', () => {
