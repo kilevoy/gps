@@ -531,6 +531,8 @@ export default function App() {
                   <MetricCard label="Ширина рулона" value={`${format(result.rollWidth, 0)} мм`} />
                 </div>
 
+                <RollCutDiagram result={result} />
+
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Цена без отхода</p>
@@ -554,6 +556,64 @@ export default function App() {
 interface MetricCardProps {
   label: string
   value: string
+}
+
+interface RollCutDiagramProps {
+  result: CalculationResult
+}
+
+function RollCutDiagram({ result }: RollCutDiagramProps) {
+  const stripCount = Math.max(0, result.countFromRoll)
+  const stripPercent = result.rollWidth > 0 ? (result.razvertka / result.rollWidth) * 100 : 0
+  const wastePercent = result.rollWidth > 0 ? (result.wasteMm / result.rollWidth) * 100 : 0
+  const strips = Array.from({ length: stripCount }, (_, index) => index + 1)
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Срез рулона</p>
+          <p className="mt-1 text-sm font-extrabold text-slate-900">
+            {format(result.rollWidth, 0)} мм = {format(result.countFromRoll, 0)} штрипс. + отход {format(result.wasteMm, 0)} мм
+          </p>
+        </div>
+        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-700">
+          штрипс {format(result.razvertka, 0)} мм
+        </span>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-slate-300 bg-slate-100">
+        <div className="flex h-16 w-full">
+          {strips.map((strip) => (
+            <div
+              key={strip}
+              className="flex min-w-0 flex-col items-center justify-center border-r border-slate-300 bg-sky-100 px-1 text-center text-[10px] font-extrabold text-sky-950"
+              style={{ width: `${stripPercent}%` }}
+              title={`Штрипс ${strip}: ${format(result.razvertka)} мм`}
+            >
+              <span className="truncate">Штрипс {strip}</span>
+              <span className="truncate">{format(result.razvertka, 0)} мм</span>
+            </div>
+          ))}
+          {result.wasteMm > 0 && (
+            <div
+              className="flex min-w-[42px] flex-col items-center justify-center bg-rose-100 px-1 text-center text-[10px] font-extrabold text-rose-900"
+              style={{ width: `${wastePercent}%` }}
+              title={`Отход: ${format(result.wasteMm)} мм`}
+            >
+              <span className="truncate">Отход</span>
+              <span className="truncate">{format(result.wasteMm, 0)} мм</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-2 flex justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
+        <span>0 мм</span>
+        <span>{format(result.rollWidth, 0)} мм</span>
+      </div>
+    </div>
+  )
 }
 
 function MetricCard({ label, value }: MetricCardProps) {
