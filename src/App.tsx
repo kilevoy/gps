@@ -18,14 +18,14 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 const thicknessOptions = [1, 1.2, 1.5, 2, 2.5, 3]
-const wallHeightTicks = Array.from({ length: 26 }, (_, index) => 100 + index * 10)
 const shelfWidthTicks = Array.from({ length: 13 }, (_, index) => 40 + index * 5)
+const shelfWidthBTicks = Array.from({ length: 12 }, (_, index) => 40 + index * 5)
 const flangeMin = 13
 const flangeMax = 27
 
-interface WasteMapCell {
-  wallHeight: number
+interface ProfileSelectionCell {
   shelfWidthA: number
+  shelfWidthB: number
   wastePercentage: number
 }
 
@@ -166,39 +166,41 @@ export default function App() {
     return result.wastePercentage > 5 ? 'danger' : 'good'
   }, [result])
 
-  const wasteMap = useMemo(() => {
+  const profileSelectionMap = useMemo(() => {
     if (!normalizedValues) return []
 
-    return wallHeightTicks.map((wallHeight) =>
-        shelfWidthTicks.map<WasteMapCell>((shelfWidthA) => {
-          const next = calculateExactResult({
-            ...normalizedValues,
-            wallHeight,
-            shelfWidthA,
-            shelfWidthB: normalizedValues.profileType === 'PZ' ? normalizedValues.shelfWidthB : shelfWidthA,
-          })
+    const shelfWidthRows = normalizedValues.profileType === 'PZ' ? shelfWidthBTicks : [normalizedValues.shelfWidthB]
 
-          return {
-            wallHeight,
-            shelfWidthA,
-            wastePercentage: next.wastePercentage,
-          }
-        }),
-      )
+    return shelfWidthRows.map((shelfWidthB) =>
+      shelfWidthTicks.map<ProfileSelectionCell>((shelfWidthA) => {
+        const next = calculateExactResult({
+          ...normalizedValues,
+          shelfWidthA,
+          shelfWidthB: normalizedValues.profileType === 'PZ' ? shelfWidthB : shelfWidthA,
+        })
+
+        return {
+          shelfWidthA,
+          shelfWidthB,
+          wastePercentage: next.wastePercentage,
+        }
+      }),
+    )
   }, [normalizedValues])
 
-  function applyGraphCell(cell: WasteMapCell) {
-    setValue('wallHeight', cell.wallHeight, { shouldDirty: true, shouldTouch: true, shouldValidate: true })
+  function applyProfileSelectionCell(cell: ProfileSelectionCell) {
     setValue('shelfWidthA', cell.shelfWidthA, { shouldDirty: true, shouldTouch: true, shouldValidate: true })
 
-    if (profileType !== 'PZ') {
+    if (profileType === 'PZ') {
+      setValue('shelfWidthB', cell.shelfWidthB, { shouldDirty: true, shouldTouch: true, shouldValidate: true })
+    } else {
       setValue('shelfWidthB', cell.shelfWidthA, { shouldDirty: true, shouldTouch: true, shouldValidate: true })
     }
   }
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_10%_20%,#eff6ff,transparent_40%),radial-gradient(circle_at_90%_0%,#fee2e2,transparent_35%),#f8fafc] px-4 py-8 font-sans text-slate-900">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-7xl">
         <header className="mb-6 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xl backdrop-blur">
           <a
             href="https://kilevoy.github.io/"
@@ -210,7 +212,7 @@ export default function App() {
           <h1 className="font-['Exo_2'] text-2xl font-bold leading-tight sm:text-3xl">Калькулятор профилей ИНСИ</h1>
         </header>
 
-        <div className="grid gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
+        <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)_340px]">
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
             <h2 className="mb-4 text-lg font-bold">Параметры</h2>
             <form className="space-y-4">
@@ -304,6 +306,138 @@ export default function App() {
             </form>
           </section>
 
+          <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-lg">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-base font-extrabold">Подбор выгодного профиля</h2>
+              <div className="flex flex-wrap gap-1.5 text-[10px] font-bold text-slate-700">
+                <span className="rounded-full bg-emerald-100 px-2 py-1">0-5%</span>
+                <span className="rounded-full bg-yellow-100 px-2 py-1">5-10%</span>
+                <span className="rounded-full bg-orange-100 px-2 py-1">10-20%</span>
+                <span className="rounded-full bg-rose-100 px-2 py-1">&gt;20%</span>
+              </div>
+            </div>
+
+            <div className="mb-3 flex flex-wrap items-center gap-1.5">
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-extrabold text-slate-800">
+                {labelByProfile(profileType)}
+              </span>
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700">
+                H {format(Number(watchedValues.wallHeight ?? 0), 0)} мм
+              </span>
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700">
+                t {formatThickness(selectedThickness)} мм
+              </span>
+              {result && (
+                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700">
+                  рулон {format(result.rollWidth, 0)} мм
+                </span>
+              )}
+              {showFlangeC && (
+                <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-extrabold text-amber-900">
+                  C {format(flangeCValue, 0)} мм
+                </span>
+              )}
+            </div>
+
+            <p className="mb-3 text-xs font-medium text-slate-500">
+              Полки A идут по горизонтали. Клик по ячейке подставляет выгодный вариант в расчет.
+            </p>
+
+            {!normalizedValues && (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
+                Для подбора нужны корректные параметры профиля.
+              </div>
+            )}
+
+            {normalizedValues && (
+              <div>
+                {showFlangeC && (
+                  <div className="mb-3 rounded-2xl border-2 border-amber-200 bg-amber-50 p-3 shadow-sm">
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                      <label htmlFor="graphFlangeC" className="text-sm font-extrabold text-amber-900">
+                        Отгибка C
+                      </label>
+                      <span className="rounded-full bg-white px-3 py-1 text-sm font-extrabold text-slate-900 shadow-sm">
+                        {format(flangeCValue, 0)} мм
+                      </span>
+                    </div>
+                    <input
+                      id="graphFlangeC"
+                      className="w-full accent-amber-600"
+                      type="range"
+                      min={flangeMin}
+                      max={flangeMax}
+                      step={1}
+                      value={flangeCValue}
+                      onChange={(event) => {
+                        setValue('flangeC', Number(event.target.value), {
+                          shouldDirty: true,
+                          shouldTouch: true,
+                          shouldValidate: true,
+                        })
+                      }}
+                    />
+                    <div className="mt-1 flex justify-between text-xs font-bold text-slate-500">
+                      <span>{flangeMin} мм</span>
+                      <span>{flangeMax} мм</span>
+                    </div>
+                  </div>
+                )}
+
+                <table className="w-full table-fixed border-separate border-spacing-0.5">
+                  <thead>
+                    <tr>
+                      <th className="w-12 px-1 py-2 text-right text-[9px] font-bold uppercase text-slate-500">
+                        {profileType === 'PZ' ? 'B' : 'A'}
+                      </th>
+                      {shelfWidthTicks.map((shelfWidth) => (
+                        <th key={shelfWidth} className="px-0.5 py-2 text-center text-[9px] font-bold uppercase text-slate-500">
+                          {shelfWidth}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {profileSelectionMap.map((row, rowIndex) => (
+                      <tr key={profileType === 'PZ' ? row[0].shelfWidthB : rowIndex}>
+                        <th className="px-1 py-1 text-right text-[9px] font-bold text-slate-500">
+                          {profileType === 'PZ' ? row[0].shelfWidthB : 'отх.'}
+                        </th>
+                        {row.map((cell) => {
+                          const isSelected =
+                            cell.shelfWidthA === normalizedValues.shelfWidthA &&
+                            (profileType !== 'PZ' || cell.shelfWidthB === normalizedValues.shelfWidthB)
+
+                          return (
+                            <td key={`${cell.shelfWidthB}-${cell.shelfWidthA}`} className="p-0.5">
+                              <button
+                                className={`flex h-7 w-full cursor-pointer items-center justify-center rounded-md border text-[9px] font-extrabold transition hover:scale-[1.03] hover:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-1 ${
+                                  isSelected ? 'border-slate-900 shadow-[0_0_0_2px_rgba(15,23,42,0.16)]' : 'border-white'
+                                }`}
+                                type="button"
+                                onClick={() => applyProfileSelectionCell(cell)}
+                                style={{
+                                  backgroundColor: getWasteColor(cell.wastePercentage),
+                                  color: getWasteTextColor(cell.wastePercentage),
+                                }}
+                                title={`Полка A ${cell.shelfWidthA} мм${
+                                  profileType === 'PZ' ? `, полка B ${cell.shelfWidthB} мм` : ''
+                                }: ${format(cell.wastePercentage)}%`}
+                              >
+                                {format(cell.wastePercentage, 1)}
+                              </button>
+                            </td>
+                          )
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="mt-2 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Полка A, мм</p>
+              </div>
+            )}
+          </section>
+
           <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-lg font-bold">Результат</h2>
@@ -376,129 +510,6 @@ export default function App() {
           </section>
         </div>
 
-        <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="mr-2 text-lg font-bold">Подбор выгодного профиля</h2>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-800">
-                {labelByProfile(profileType)}
-              </span>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
-                t {formatThickness(selectedThickness)} мм
-              </span>
-              {result && (
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
-                  рулон {format(result.rollWidth, 0)} мм
-                </span>
-              )}
-              {showFlangeC && (
-                <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-extrabold text-amber-900">
-                  C {format(flangeCValue, 0)} мм
-                </span>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-2 text-xs font-bold text-slate-700">
-              <span className="rounded-full bg-emerald-100 px-3 py-1">0-5%</span>
-              <span className="rounded-full bg-yellow-100 px-3 py-1">5-10%</span>
-              <span className="rounded-full bg-orange-100 px-3 py-1">10-20%</span>
-              <span className="rounded-full bg-rose-100 px-3 py-1">&gt;20%</span>
-            </div>
-          </div>
-          <p className="mb-4 text-xs font-medium text-slate-500">
-            X: полка A, Y: высота стенки. Клик по ячейке подставляет размеры в расчет.
-          </p>
-
-          {!normalizedValues && (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
-              Для графика нужны корректные параметры расчета.
-            </div>
-          )}
-
-          {normalizedValues && (
-            <div>
-              {showFlangeC && (
-                <div className="mb-4 rounded-2xl border-2 border-amber-200 bg-amber-50 p-4 shadow-sm">
-                  <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                    <label htmlFor="graphFlangeC" className="text-sm font-extrabold text-amber-900">
-                      Отгибка C
-                    </label>
-                    <span className="rounded-full bg-white px-3 py-1 text-sm font-extrabold text-slate-900 shadow-sm">
-                      {format(flangeCValue, 0)} мм
-                    </span>
-                  </div>
-                  <input
-                    id="graphFlangeC"
-                    className="w-full accent-amber-600"
-                    type="range"
-                    min={flangeMin}
-                    max={flangeMax}
-                    step={1}
-                    value={flangeCValue}
-                    onChange={(event) => {
-                      setValue('flangeC', Number(event.target.value), {
-                        shouldDirty: true,
-                        shouldTouch: true,
-                        shouldValidate: true,
-                      })
-                    }}
-                  />
-                  <div className="mt-2 flex justify-between text-xs font-bold text-slate-500">
-                    <span>{flangeMin} мм</span>
-                    <span>{flangeMax} мм</span>
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <table className="w-full table-fixed border-separate border-spacing-0.5 sm:border-spacing-1">
-                <thead>
-                  <tr>
-                    <th className="w-12 px-1 py-2 text-right text-[9px] font-bold uppercase text-slate-500 sm:w-16 sm:text-xs">
-                      Высота
-                    </th>
-                    {shelfWidthTicks.map((shelfWidth) => (
-                      <th key={shelfWidth} className="px-0.5 py-2 text-center text-[9px] font-bold uppercase text-slate-500 sm:text-xs">
-                        {shelfWidth}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {wasteMap.map((row) => (
-                    <tr key={row[0].wallHeight}>
-                      <th className="px-1 py-1 text-right text-[9px] font-bold text-slate-500 sm:text-xs">{row[0].wallHeight}</th>
-                      {row.map((cell) => {
-                        const isSelected =
-                          cell.wallHeight === normalizedValues.wallHeight && cell.shelfWidthA === normalizedValues.shelfWidthA
-
-                        return (
-                          <td key={`${cell.wallHeight}-${cell.shelfWidthA}`} className="p-0.5">
-                            <button
-                              className={`flex h-7 w-full cursor-pointer items-center justify-center rounded-md border text-[9px] font-extrabold transition hover:scale-[1.03] hover:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-1 sm:h-8 sm:rounded-lg sm:text-xs ${
-                                isSelected ? 'border-slate-900 shadow-[0_0_0_2px_rgba(15,23,42,0.16)]' : 'border-white'
-                              }`}
-                              type="button"
-                              onClick={() => applyGraphCell(cell)}
-                              style={{
-                                backgroundColor: getWasteColor(cell.wastePercentage),
-                                color: getWasteTextColor(cell.wastePercentage),
-                              }}
-                              title={`Высота ${cell.wallHeight} мм, полка ${cell.shelfWidthA} мм: ${format(cell.wastePercentage)}%`}
-                            >
-                              {format(cell.wastePercentage, 1)}
-                            </button>
-                          </td>
-                        )
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-                <p className="mt-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Полка A, мм</p>
-              </div>
-            </div>
-          )}
-        </section>
       </div>
     </main>
   )
