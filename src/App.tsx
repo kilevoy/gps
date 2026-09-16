@@ -2,6 +2,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useMemo } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
+import pgsProfileImage from './assets/profiles/pgs.png'
+import ppProfileImage from './assets/profiles/pp.png'
+import pzProfileImage from './assets/profiles/pz.png'
 import { calculateExactResult, getRollWidthOptions, type CalculationResult, type ProfileType } from './lib/calculator'
 
 const formSchema = z.object({
@@ -22,6 +25,11 @@ const shelfWidthTicks = Array.from({ length: 13 }, (_, index) => 40 + index * 5)
 const shelfWidthBTicks = Array.from({ length: 12 }, (_, index) => 40 + index * 5)
 const flangeMin = 13
 const flangeMax = 27
+const profileImages: Record<ProfileType, string> = {
+  PP: ppProfileImage,
+  PGS: pgsProfileImage,
+  PZ: pzProfileImage,
+}
 
 interface ProfileSelectionCell {
   shelfWidthA: number
@@ -105,6 +113,7 @@ export default function App() {
 
   const watchedValues = useWatch({ control })
   const profileType = watchedValues.profileType ?? 'PP'
+  const profileImage = profileImages[profileType]
   const showShelfB = profileType === 'PZ'
   const showFlangeC = profileType !== 'PP'
   const flangeCValue = Number(watchedValues.flangeC ?? flangeMin)
@@ -212,8 +221,8 @@ export default function App() {
           <h1 className="font-['Exo_2'] text-2xl font-bold leading-tight sm:text-3xl">Калькулятор профилей ИНСИ</h1>
         </header>
 
-        <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)_340px]">
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
+        <div className="grid gap-6 lg:grid-cols-[380px_minmax(0,1fr)]">
+          <section className="order-1 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
             <h2 className="mb-4 text-lg font-bold">Параметры</h2>
             <form className="space-y-4">
               <label className="block space-y-1">
@@ -306,7 +315,7 @@ export default function App() {
             </form>
           </section>
 
-          <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-lg">
+          <section className="order-3 rounded-3xl border border-slate-200 bg-white p-4 shadow-lg lg:col-span-2">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-base font-extrabold">Подбор выгодного профиля</h2>
               <div className="flex flex-wrap gap-1.5 text-[10px] font-bold text-slate-700">
@@ -438,7 +447,7 @@ export default function App() {
             )}
           </section>
 
-          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
+          <section className="order-2 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-lg font-bold">Результат</h2>
               {result && (
@@ -484,6 +493,13 @@ export default function App() {
                       thickness: Number(watchedValues.thickness),
                     })}
                   </p>
+                  <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                    <img
+                      className="mx-auto h-56 w-full object-contain"
+                      src={profileImage}
+                      alt={`Схема профиля ${labelByProfile(profileType)}`}
+                    />
+                  </div>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
