@@ -99,7 +99,7 @@ export default function App() {
       shelfWidthA: 60,
       shelfWidthB: 60,
       flangeC: 15,
-      pricePerTon: 160000,
+      pricePerTon: 145000,
     },
   })
 
