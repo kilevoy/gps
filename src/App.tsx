@@ -2,6 +2,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useMemo } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { z } from 'zod'
+import pgsProductImage from './assets/profile-products/pgs.png'
+import ppProductImage from './assets/profile-products/pp.png'
+import pzProductImage from './assets/profile-products/pz.png'
 import pgsProfileImage from './assets/profiles/pgs.png'
 import ppProfileImage from './assets/profiles/pp.png'
 import pzProfileImage from './assets/profiles/pz.png'
@@ -29,6 +32,11 @@ const profileImages: Record<ProfileType, string> = {
   PP: ppProfileImage,
   PGS: pgsProfileImage,
   PZ: pzProfileImage,
+}
+const productImages: Record<ProfileType, string> = {
+  PP: ppProductImage,
+  PGS: pgsProductImage,
+  PZ: pzProductImage,
 }
 
 interface ProfileSelectionCell {
@@ -114,6 +122,7 @@ export default function App() {
   const watchedValues = useWatch({ control })
   const profileType = watchedValues.profileType ?? 'PP'
   const profileImage = profileImages[profileType]
+  const productImage = productImages[profileType]
   const showShelfB = profileType === 'PZ'
   const showFlangeC = profileType !== 'PP'
   const flangeCValue = Number(watchedValues.flangeC ?? flangeMin)
@@ -211,13 +220,6 @@ export default function App() {
     <main className="min-h-screen bg-[radial-gradient(circle_at_10%_20%,#eff6ff,transparent_40%),radial-gradient(circle_at_90%_0%,#fee2e2,transparent_35%),#f8fafc] px-4 py-8 font-sans text-slate-900">
       <div className="mx-auto max-w-7xl">
         <header className="mb-6 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-xl backdrop-blur">
-          <a
-            href="https://kilevoy.github.io/"
-            title="Вернуться в портфолио"
-            className="mb-3 inline-block rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
-          >
-            ← Портфолио
-          </a>
           <h1 className="font-['Exo_2'] text-2xl font-bold leading-tight sm:text-3xl">Калькулятор профилей ИНСИ</h1>
         </header>
 
@@ -312,6 +314,31 @@ export default function App() {
                 <input className="input" type="number" {...register('pricePerTon', { valueAsNumber: true })} />
                 {errors.pricePerTon && <p className="field-error">{errors.pricePerTon.message}</p>}
               </label>
+
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  <p className="text-sm font-extrabold text-slate-800">Визуал профиля</p>
+                  <span className="rounded-full bg-white px-2.5 py-1 text-xs font-extrabold text-slate-700 shadow-sm">
+                    {labelByProfile(profileType)}
+                  </span>
+                </div>
+                <div className="grid gap-3">
+                  <div className="rounded-xl border border-slate-200 bg-white p-2">
+                    <img
+                      className="h-32 w-full object-contain"
+                      src={productImage}
+                      alt={`Изображение профиля ${labelByProfile(profileType)}`}
+                    />
+                  </div>
+                  <div className="rounded-xl border border-slate-200 bg-white p-2">
+                    <img
+                      className="h-40 w-full object-contain"
+                      src={profileImage}
+                      alt={`Чертеж профиля ${labelByProfile(profileType)}`}
+                    />
+                  </div>
+                </div>
+              </div>
             </form>
           </section>
 
@@ -493,13 +520,6 @@ export default function App() {
                       thickness: Number(watchedValues.thickness),
                     })}
                   </p>
-                  <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                    <img
-                      className="mx-auto h-56 w-full object-contain"
-                      src={profileImage}
-                      alt={`Схема профиля ${labelByProfile(profileType)}`}
-                    />
-                  </div>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
